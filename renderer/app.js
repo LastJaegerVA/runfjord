@@ -59,6 +59,7 @@ const catColor = (name) => (lib.categories.find((c) => c.name === name) || {}).c
 const MARK = (id) => `<svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:color-mix(in srgb, var(--accent) 55%, #ffffff)"/><stop offset="1" style="stop-color:var(--accent)"/></linearGradient><clipPath id="${id}c"><rect width="64" height="64" rx="15"/></clipPath></defs><g clip-path="url(#${id}c)"><rect width="64" height="64" fill="#0c1222"/><g fill="none" stroke-linecap="round" stroke-width="1.6" style="stroke:var(--accent)" stroke-opacity=".45"><path d="M0 12 C8 12 13 13.5 18 15 L60 26"/><path d="M0 52 C8 52 13 50.5 18 49 L60 38"/></g><path d="M0 18 C6 18 11 19.5 16 21 L50 29.5 Q54 32 50 34.5 L16 43 C11 44.5 6 46 0 46 Z" fill="url(#${id})"/><rect x="7" y="27" width="18" height="3.4" rx="1.7" fill="#fff" fill-opacity=".92"/><rect x="7" y="33.6" width="12" height="3.4" rx="1.7" fill="#fff" fill-opacity=".6"/></g></svg>`;
 const icon = (d) => `<svg viewBox="0 0 24 24">${d}</svg>`;
 const I = {
+  search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
   play: '<path d="M7 4.5v15l12.5-7.5z" fill="currentColor" stroke="none"/>',
   stop: '<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" stroke="none"/>',
   term: '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7 9l3 3-3 3M13 15h4"/>',
@@ -270,6 +271,7 @@ function renderDetail() {
         <button class="btn btn-primary" data-act="add">${icon(I.plus)} ${t('add_scripts')}</button>
         <button class="btn" data-act="new">${icon(I.file)} ${t('create_new')}</button>
       </div>
+      ${lib.scripts.length ? '' : `<button class="btn btn-ghost" data-act="scan" style="margin-top:10px">${icon(I.search)} ${t('find_scripts_tip')}</button>`}
       <div class="shortcuts">
         <kbd>${KEY()} N</kbd><span>${t('sc_add')}</span>
         <kbd>${KEY()} Shift N</kbd><span>${t('sc_new')}</span>
@@ -614,6 +616,107 @@ async function addPaths(paths) {
     }
     persist(); closeModal(); checkMissing(); renderAll();
     toast(t('added_n', { n: fresh.length }), 'ok');
+  };
+}
+// ---------- find scripts already on this computer ----------
+const SHEBANG_EXT = { bash: 'sh', sh: 'sh', dash: 'sh', zsh: 'zsh', fish: 'fish', python: 'py', python3: 'py', python2: 'py', node: 'js', deno: 'ts', bun: 'js', ruby: 'rb', perl: 'pl', lua: 'lua', php: 'php', pwsh: 'ps1' };
+function scanLang(f) {
+  if (extOf(f.path)) return langOf(f.path);
+  const first = (f.head || '').split(/\r?\n/)[0];
+  if (!first.startsWith('#!')) return langOf(f.path);
+  const parts = first.slice(2).trim().split(/\s+/);
+  let prog = (parts[0] || '').split('/').pop();
+  if (prog === 'env') prog = parts.slice(1).find((x) => !x.startsWith('-') && !x.includes('=')) || '';
+  prog = prog.replace(/[\d.]+$/, '');
+  const ext = SHEBANG_EXT[prog];
+  return ext ? LANGS[ext] : langOf(f.path);
+}
+const scanState = { folders: null, files: [], picked: new Set(), sort: 'lang', busy: false };
+api.onScanProgress((n) => { const el = $('#scanCount'); if (el) el.textContent = t('scan_searching', { n }); });
+
+async function openScan() {
+  if (!scanState.folders) scanState.folders = lib.settings?.scanFolders?.length ? [...lib.settings.scanFolders] : await api.scanDefaults();
+  scanState.files = []; scanState.picked = new Set();
+  renderScanFolders();
+}
+function saveScanFolders() { lib.settings = lib.settings || {}; lib.settings.scanFolders = [...scanState.folders]; persist(); }
+function renderScanFolders() {
+  openModal(`
+    <div class="m-head"><h2>${t('scan_title')}</h2></div>
+    <div class="m-body">
+      <div class="field"><label>${t('scan_where')}</label>
+        <div class="scan-folders">${scanState.folders.map((f, i) => `<div class="scan-folder">${icon(I.folder)}<span dir="ltr">${esc(f)}</span><button class="mini-btn" data-rm="${i}" title="${t('remove')}">×</button></div>`).join('') || `<div class="hint">—</div>`}</div>
+        <button class="btn btn-ghost" id="scanAddDir" style="margin-top:8px">${icon(I.plus)} ${t('scan_add_folder')}</button>
+      </div>
+      <div class="hint">${t('scan_hint')}</div>
+    </div>
+    <div class="m-foot"><button class="btn" data-close>${t('cancel')}</button><button class="btn btn-primary" id="scanGo" ${scanState.folders.length ? '' : 'disabled'}>${icon(I.search)} ${t('scan_start')}</button></div>`, 'wide');
+  $$('[data-rm]').forEach((b) => (b.onclick = () => { scanState.folders.splice(+b.dataset.rm, 1); saveScanFolders(); renderScanFolders(); }));
+  $('#scanAddDir').onclick = async () => { const p = await api.pickFolder(); if (p && !scanState.folders.includes(p)) { scanState.folders.push(p); saveScanFolders(); } renderScanFolders(); };
+  $('#scanGo').onclick = runScan;
+}
+async function runScan() {
+  if (scanState.busy) return; scanState.busy = true;
+  $('#modal .m-body').innerHTML = `<div class="scan-progress"><div class="spinner"></div><div id="scanCount">${t('scan_searching', { n: 0 })}</div></div>`;
+  $('#scanGo').disabled = true;
+  let res;
+  try { res = await api.scan(scanState.folders); } finally { scanState.busy = false; }
+  const known = new Set(lib.scripts.map((s) => s.path));
+  scanState.files = res.files.filter((f) => !known.has(f.path)).map((f) => ({ ...f, lang: scanLang(f), desc: parseHeader(f.head) }))
+    .sort((a, b) => a.lang.name.localeCompare(b.lang.name) || basename(a.path).localeCompare(basename(b.path)));
+  scanState.picked = new Set(scanState.files.map((f) => f.path));
+  renderScanResults();
+}
+function scanCategory(f) {
+  if (scanState.sort === 'lang') return f.lang.name;
+  if (scanState.sort === 'folder') return f.folder ? f.folder.charAt(0).toUpperCase() + f.folder.slice(1) : '';
+  return '';
+}
+function renderScanResults() {
+  const files = scanState.files;
+  if (!files.length) {
+    $('#modal .m-body').innerHTML = `<div class="scan-progress">${icon(I.list)}<div>${t('scan_none')}</div></div>`;
+    $('#modal .m-foot').innerHTML = `<button class="btn" data-close>${t('cancel')}</button><button class="btn" id="scanBack">${t('scan_again')}</button>`;
+    $$('[data-close]', $('#modal')).forEach((b) => (b.onclick = closeModal));
+    $('#scanBack').onclick = renderScanFolders; return;
+  }
+  $('#modal .m-body').innerHTML = `
+    <div class="scan-bar">
+      <strong>${t('scan_found', { n: files.length })}</strong>
+      <span class="grow"></span>
+      <label>${t('scan_sort')}</label>
+      <select class="select-sm" id="scanSort">
+        <option value="lang" ${scanState.sort === 'lang' ? 'selected' : ''}>${t('scan_by_lang')}</option>
+        <option value="folder" ${scanState.sort === 'folder' ? 'selected' : ''}>${t('scan_by_folder')}</option>
+        <option value="none" ${scanState.sort === 'none' ? 'selected' : ''}>${t('scan_no_sort')}</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" id="scanAll">${t('scan_all')}</button>
+      <button class="btn btn-ghost btn-sm" id="scanNone">${t('scan_none_sel')}</button>
+    </div>
+    <div class="scan-list">${files.map((f, i) => `
+      <label class="scan-row">
+        <input type="checkbox" data-i="${i}" ${scanState.picked.has(f.path) ? 'checked' : ''}>
+        <div class="badge" style="--c:${f.lang.color}">${esc(f.lang.label)}</div>
+        <div class="scan-txt">
+          <div class="scan-name">${esc(prettyName(f.path))} <span class="scan-cat">${esc(scanCategory(f))}</span></div>
+          <div class="scan-path" dir="ltr">${esc(f.path)}</div>
+          ${f.desc ? `<div class="scan-desc">${esc(f.desc)}</div>` : ''}
+        </div>
+      </label>`).join('')}</div>`;
+  $('#modal .m-foot').innerHTML = `<button class="btn" data-close>${t('cancel')}</button><button class="btn" id="scanBack">${t('scan_again')}</button><button class="btn btn-primary" id="scanAdd">${t('scan_add', { n: scanState.picked.size })}</button>`;
+  $$('[data-close]', $('#modal')).forEach((b) => (b.onclick = closeModal));
+  const upd = () => { const b = $('#scanAdd'); b.textContent = t('scan_add', { n: scanState.picked.size }); b.disabled = !scanState.picked.size; };
+  upd();
+  $$('.scan-list input').forEach((cb) => (cb.onchange = () => { const p = files[+cb.dataset.i].path; cb.checked ? scanState.picked.add(p) : scanState.picked.delete(p); upd(); }));
+  $('#scanSort').onchange = (e) => { scanState.sort = e.target.value; const top = $('.scan-list').scrollTop; renderScanResults(); $('.scan-list').scrollTop = top; };
+  $('#scanAll').onclick = () => { scanState.picked = new Set(files.map((f) => f.path)); renderScanResults(); };
+  $('#scanNone').onclick = () => { scanState.picked.clear(); renderScanResults(); };
+  $('#scanBack').onclick = renderScanFolders;
+  $('#scanAdd').onclick = () => {
+    const chosen = files.filter((f) => scanState.picked.has(f.path));
+    for (const f of chosen) lib.scripts.push(newScriptObj({ path: f.path, name: prettyName(f.path), description: f.desc, category: ensureCategory(scanCategory(f)) }));
+    persist(); closeModal(); checkMissing(); renderAll();
+    toast(t('added_n', { n: chosen.length }), 'ok');
   };
 }
 function newScriptObj(o) {
@@ -989,6 +1092,7 @@ async function doAction(act, id = ui.selectedId) {
   switch (act) {
     case 'add': return addPaths(await api.pickFiles());
     case 'new': return openNewScript();
+    case 'scan': return openScan();
     case 'run': return runScript(id);
     case 'stop': return stopScript(id);
     case 'terminal': return runInTerminal(id);
@@ -1012,6 +1116,7 @@ async function doAction(act, id = ui.selectedId) {
 // events
 // ================================================================
 $('#btnAdd').onclick = () => doAction('add');
+$('#btnFind').onclick = () => doAction('scan');
 $('#btnNew').onclick = () => doAction('new');
 $('#btnSettings').onclick = openSettings;
 $('#btnAddCat').onclick = async () => {

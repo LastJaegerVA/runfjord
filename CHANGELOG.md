@@ -3,6 +3,11 @@
 All notable changes to Runfjord. The format follows [Keep a Changelog](https://keepachangelog.com/),
 and versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.5.0] - 2026-11-24
+
+### Added
+- **Find scripts on this computer** (magnifier button in the sidebar): searches `~/bin`, `~/.local/bin`, `~/scripts`, Documents, Desktop, Downloads and any folders you add, recognises scripts by file type or by their `#!` line, skips program, system, hidden and Python-environment folders, fills in descriptions from each script's top comment, and sorts them into categories by language or folder name. Nothing is added until you choose. Translated into all 35 languages.
+
 ## [1.4.4] - 2026-11-24
 
 ### Changed
@@ -68,6 +73,7 @@ and versions follow [Semantic Versioning](https://semver.org/).
 - First release: script library with descriptions, categories, tags and favourites; one-click running with live
   output; run in terminal; built-in code editor; new-script templates; search and sorting; export/import.
 
+[1.5.0]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.5.0
 [1.4.4]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.4.4
 [1.4.3]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.4.3
 [1.4.2]: ../../releases/tag/v1.4.2

@@ -22,5 +22,8 @@ contextBridge.exposeInMainWorld('api', {
   stop: (id) => ipcRenderer.invoke('run:stop', id),
   runInTerminal: (s) => ipcRenderer.invoke('run:terminal', s),
   onRunEvent: (cb) => ipcRenderer.on('run:event', (_e, ev) => cb(ev)),
+  scanDefaults: () => ipcRenderer.invoke('scan:defaults'),
+  scan: (roots) => ipcRenderer.invoke('scan:run', roots),
+  onScanProgress: (cb) => ipcRenderer.on('scan:progress', (_e, n) => cb(n)),
   pathForFile: (file) => webUtils.getPathForFile(file),
 });

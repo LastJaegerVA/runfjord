@@ -22,6 +22,7 @@
 ## Features
 
 - **One library for all your scripts** — add them with a button, <kbd>Ctrl</kbd>+<kbd>N</kbd>, or by dragging files onto the window.
+- **Finds the scripts you already have** — one click searches your usual folders (`~/bin`, `~/.local/bin`, `~/scripts`, Documents, Desktop, Downloads, or any folder you pick), skips program, system and hidden folders, and sorts what it finds into categories by language or folder. You tick which ones to add.
 - **Never forget what a script does** — every script gets a *What it does* and a *What it's for* note. Descriptions are read automatically from the comment at the top of the file.
 - **Run with one click** — live output (errors in red), send input, stop at any time. *Run in terminal* for scripts that need `sudo` or ask questions.
 - **Organise** — categories (drag cards onto them), tags, favourites, icons, search and sorting.

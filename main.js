@@ -174,6 +174,78 @@ ipcMain.handle('fs:write', (_e, p, content) => {
 ipcMain.handle('fs:exists', (_e, paths) => paths.map((p) => { try { return fs.existsSync(p); } catch { return false; } }));
 ipcMain.handle('fs:stat', (_e, p) => { try { const s = fs.statSync(p); return { size: s.size, mtime: s.mtimeMs }; } catch { return null; } });
 
+// ---------- find scripts already on this computer ----------
+const SCRIPT_EXT = new Set(['.sh', '.bash', '.zsh', '.fish', '.py', '.js', '.mjs', '.cjs', '.ts', '.rb', '.pl', '.lua', '.php', '.ps1', '.bat', '.cmd']);
+// folders that hold programs, libraries, caches or system files rather than the user's own scripts
+const SKIP_DIRS = new Set(['node_modules', 'bower_components', 'vendor', 'venv', 'env', 'site-packages', 'dist-packages', '__pycache__',
+  'dist', 'build', 'out', 'target', 'bin-release', 'appdata', 'application data', 'library', 'program files', 'program files (x86)', 'programdata',
+  'windows', 'steamapps', 'steam', 'snap', 'flatpak', 'go', 'miniconda3', 'anaconda3', 'lib', 'lib64', 'include', 'share', 'games', 'onedrive temp']);
+const SCAN_MAX_FILES = 3000, SCAN_MAX_DEPTH = 6, SCAN_MAX_SIZE = 1024 * 1024;
+
+function scanDefaults() {
+  const home = app.getPath('home');
+  const pick = (k) => { try { return app.getPath(k); } catch { return null; } };
+  const list = isWin
+    ? [path.join(home, 'scripts'), path.join(home, 'Scripts'), path.join(home, 'bin'), pick('documents'), pick('desktop'), pick('downloads')]
+    : [path.join(home, 'bin'), path.join(home, '.local', 'bin'), path.join(home, 'scripts'), path.join(home, 'Scripts'), pick('documents'), pick('desktop'), pick('downloads')];
+  // never the whole home folder: on some systems "Documents" falls back to it
+  let homeReal = home; try { homeReal = fs.realpathSync(home); } catch {}
+  const seen = new Set([isWin ? homeReal.toLowerCase() : homeReal]);
+  return list.filter((d) => {
+    if (!d) return false;
+    let real; try { real = fs.realpathSync(d); } catch { return false; }
+    const key = isWin ? real.toLowerCase() : real;
+    if (seen.has(key)) return false; seen.add(key);
+    try { return fs.statSync(real).isDirectory(); } catch { return false; }
+  });
+}
+
+function readHead(file) {
+  try {
+    const fd = fs.openSync(file, 'r'); const buf = Buffer.alloc(4096);
+    const n = fs.readSync(fd, buf, 0, 4096, 0); fs.closeSync(fd);
+    return buf.subarray(0, n);
+  } catch { return null; }
+}
+const looksBinary = (buf) => buf.includes(0);
+
+async function scanFolders(roots, sender) {
+  const found = []; const seen = new Set(); let lastPing = 0;
+  const ping = (done) => { const now = Date.now(); if (done || now - lastPing > 150) { lastPing = now; sender.send('scan:progress', found.length); } };
+  async function walk(dir, depth, isRoot) {
+    if (found.length >= SCAN_MAX_FILES || depth > SCAN_MAX_DEPTH) return;
+    let entries; try { entries = await fs.promises.readdir(dir, { withFileTypes: true }); } catch { return; }
+    // a Python virtual environment or a git checkout of someone else's project is not "your scripts"
+    if (!isRoot && entries.some((e) => e.name === 'pyvenv.cfg')) return;
+    for (const e of entries) {
+      if (found.length >= SCAN_MAX_FILES) return;
+      const full = path.join(dir, e.name);
+      if (e.isDirectory()) {
+        if (e.name.startsWith('.') || SKIP_DIRS.has(e.name.toLowerCase())) continue;
+        await walk(full, depth + 1, false);
+      } else if (e.isFile() || e.isSymbolicLink()) {
+        const ext = path.extname(e.name).toLowerCase();
+        let st; try { st = await fs.promises.stat(full); } catch { continue; }
+        if (!st.isFile() || st.size === 0 || st.size > SCAN_MAX_SIZE) continue;
+        let ok = SCRIPT_EXT.has(ext);
+        // Linux/macOS: an executable file with no extension that starts with #! is a script too
+        if (!ok && !isWin && !ext && (st.mode & 0o111)) { const h = readHead(full); ok = !!h && h[0] === 0x23 && h[1] === 0x21; }
+        if (!ok) continue;
+        let real; try { real = await fs.promises.realpath(full); } catch { continue; }
+        if (seen.has(real)) continue; seen.add(real);
+        const head = readHead(real); if (!head || looksBinary(head)) continue;
+        found.push({ path: real, folder: path.basename(path.dirname(real)), head: head.toString('utf8') });
+        ping();
+      }
+    }
+  }
+  for (const r of roots) await walk(r, 0, true);
+  ping(true);
+  return { files: found, capped: found.length >= SCAN_MAX_FILES };
+}
+ipcMain.handle('scan:defaults', () => scanDefaults());
+ipcMain.handle('scan:run', (e, roots) => scanFolders(roots.filter((r) => typeof r === 'string'), e.sender));
+
 ipcMain.handle('shell:openFile', (_e, p) => shell.openPath(p));
 ipcMain.handle('shell:showInFolder', (_e, p) => shell.showItemInFolder(p));
 
