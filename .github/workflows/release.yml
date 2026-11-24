@@ -41,12 +41,22 @@ jobs:
       - run: npm run dist:win
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install NSIS
+        shell: pwsh
+        run: |
+          $makensis = @("${env:ProgramFiles(x86)}\NSIS\makensis.exe", "$env:ProgramFiles\NSIS\makensis.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $makensis) {
+            choco install nsis -y --no-progress
+            $makensis = @("${env:ProgramFiles(x86)}\NSIS\makensis.exe", "$env:ProgramFiles\NSIS\makensis.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
+          }
+          if (-not $makensis) { throw "makensis.exe not found after installing NSIS" }
+          "MAKENSIS=$makensis" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
       - name: Build installer
         shell: pwsh
         run: |
           node tools/gen-installer-langs.js
           $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
-          & "${env:ProgramFiles(x86)}\NSIS\makensis.exe" /V2 "/DVERSION=$version" installer/runfjord.nsi
+          & $env:MAKENSIS /V2 "/DVERSION=$version" installer/runfjord.nsi
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@v4
         with:
@@ -54,8 +64,9 @@ jobs:
           path: dist/Runfjord-Setup-*.exe
 
   release:
+    # attach whatever was built — the Linux file still ships if the Windows build fails
     needs: [linux, windows]
-    if: startsWith(github.ref, 'refs/tags/')
+    if: always() && startsWith(github.ref, 'refs/tags/') && (needs.linux.result == 'success' || needs.windows.result == 'success')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4

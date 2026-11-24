@@ -3,11 +3,14 @@
 All notable changes to Runfjord. The format follows [Keep a Changelog](https://keepachangelog.com/),
 and versions follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.4.1] — 2026-11-24
 
 ### Added
 - One-command Linux installer: `curl -fsSL https://raw.githubusercontent.com/LastJaegerVA/runfjord/main/install.sh | bash`
   (no admin rights, adds an app-menu entry and a `runfjord` command, also updates and uninstalls).
+
+### Fixed
+- Release builds: the Windows build now installs NSIS itself, and the Linux download is published even if the Windows build fails.
 
 ## [1.4.0] — 2026-11-24
 
@@ -47,6 +50,7 @@ and versions follow [Semantic Versioning](https://semver.org/).
 - First release: script library with descriptions, categories, tags and favourites; one-click running with live
   output; run in terminal; built-in code editor; new-script templates; search and sorting; export/import.
 
+[1.4.1]: ../../releases/tag/v1.4.1
 [1.4.0]: ../../releases/tag/v1.4.0
 [1.3.0]: ../../releases/tag/v1.3.0
 [1.2.0]: ../../releases/tag/v1.2.0
