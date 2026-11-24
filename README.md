@@ -135,5 +135,6 @@ build/                  App icons
 
 ## License
 
-Runfjord is free and open source under the [MIT License](LICENSE) — © 2026 Jonas Olsen-Sund ([LastJaegerVA](https://github.com/LastJaegerVA)).
+Copyright © 2026 LastJaegerVA. Runfjord is free and open source under the [MIT License](LICENSE):
+anyone may use, change and share it, as long as they keep this copyright notice.
 It is built with Electron and other open-source software; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
