@@ -4,7 +4,7 @@ name: Release
 # (or when a tag like v1.4.2 is pushed). It builds:
 #   - Runfjord-Setup-<version>.exe        Windows installer
 #   - Runfjord-<version>-x86_64.AppImage  any Linux (used by install.sh)
-#   - runfjord-x86_64.pkg.tar.xz          Arch / CachyOS:  sudo pacman -U <latest download URL>
+#   - runfjord-x86_64.pkg.tar.xz          Arch / CachyOS (download, then sudo pacman -U the file)
 on:
   push:
     branches: [main]
@@ -119,7 +119,7 @@ jobs:
 
             **Arch / CachyOS / Manjaro** — one command:
             ```bash
-            sudo pacman -U https://github.com/${{ github.repository }}/releases/latest/download/runfjord-x86_64.pkg.tar.xz
+            curl -fLo /tmp/runfjord.pkg.tar.xz https://github.com/${{ github.repository }}/releases/latest/download/runfjord-x86_64.pkg.tar.xz && sudo pacman -U /tmp/runfjord.pkg.tar.xz
             ```
 
             **Any Linux** — one command, no password needed:

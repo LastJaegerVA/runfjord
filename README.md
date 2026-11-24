@@ -41,10 +41,10 @@
 ### Arch / CachyOS / Manjaro — one command
 
 ```bash
-sudo pacman -U https://github.com/LastJaegerVA/runfjord/releases/latest/download/runfjord-x86_64.pkg.tar.xz
+curl -fLo /tmp/runfjord.pkg.tar.xz https://github.com/LastJaegerVA/runfjord/releases/latest/download/runfjord-x86_64.pkg.tar.xz && sudo pacman -U /tmp/runfjord.pkg.tar.xz
 ```
 
-Installs the newest version with pacman, so it shows up in your app menu. To update later, run the same command again.
+Downloads the newest package and installs it with pacman, so it shows up in your app menu. (It downloads first because pacman refuses unsigned packages given as a web link.) To update later, run the same command again.
 Remove it with `sudo pacman -R runfjord`.
 
 ### Any Linux — one command
