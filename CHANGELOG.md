@@ -3,6 +3,11 @@
 All notable changes to Runfjord. The format follows [Keep a Changelog](https://keepachangelog.com/),
 and versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.4.3] - 2026-11-24
+
+### Fixed
+- Windows installer now builds on GitHub: installer languages missing from the NSIS version in use (e.g. Swahili) are skipped instead of stopping the build.
+
 ## [1.4.2] — 2026-11-24
 
 ### Added
@@ -58,6 +63,7 @@ and versions follow [Semantic Versioning](https://semver.org/).
 - First release: script library with descriptions, categories, tags and favourites; one-click running with live
   output; run in terminal; built-in code editor; new-script templates; search and sorting; export/import.
 
+[1.4.3]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.4.3
 [1.4.2]: ../../releases/tag/v1.4.2
 [1.4.1]: ../../releases/tag/v1.4.1
 [1.4.0]: ../../releases/tag/v1.4.0

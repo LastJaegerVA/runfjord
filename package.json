@@ -1,7 +1,7 @@
 {
   "name": "runfjord",
   "productName": "Runfjord",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Keep all your scripts in one library, with a note on what each one does, and run them with one click.",
   "main": "main.js",
   "author": {
