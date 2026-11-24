@@ -3,6 +3,12 @@
 All notable changes to Runfjord. The format follows [Keep a Changelog](https://keepachangelog.com/),
 and versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- One-command Linux installer: `curl -fsSL https://raw.githubusercontent.com/LastJaegerVA/runfjord/main/install.sh | bash`
+  (no admin rights, adds an app-menu entry and a `runfjord` command, also updates and uninstalls).
+
 ## [1.4.0] — 2026-11-24
 
 ### Added

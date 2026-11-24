@@ -38,12 +38,27 @@
 
 ## Download
 
+### Linux — one command
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/LastJaegerVA/runfjord/main/install.sh | bash
+```
+
+It downloads the newest release, installs it for your user (no password needed) and adds Runfjord to your app menu.
+Run the same command again to update. To remove Runfjord:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/LastJaegerVA/runfjord/main/install.sh | bash -s -- --uninstall
+```
+
+### Windows, or download it yourself
+
 Get the latest version from the [**Releases**](../../releases/latest) page.
 
 | System | File | How to install |
 |---|---|---|
 | **Windows 10/11** | `Runfjord-Setup-x.y.z.exe` | Run it. Installs for your user (no admin rights needed), adds Start menu and desktop shortcuts, and can be removed from *Settings → Apps*. |
-| **Linux** (x86-64) | `Runfjord-x.y.z-x86_64.AppImage` | `chmod +x Runfjord-*.AppImage`, then double-click it. Works on most distributions (Arch/CachyOS, Ubuntu, Fedora, …). |
+| **Linux** (x86-64) | `Runfjord-x.y.z-x86_64.AppImage` | Use the command above, or `chmod +x Runfjord-*.AppImage` and double-click it. Works on most distributions (Arch/CachyOS, Ubuntu, Fedora, …). |
 
 > **Windows SmartScreen** may warn the first time, because the installer isn't code-signed. Click **More info → Run anyway**.
 
