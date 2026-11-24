@@ -44,7 +44,7 @@
 sudo pacman -U https://github.com/LastJaegerVA/runfjord/releases/latest/download/runfjord-x86_64.pkg.tar.xz
 ```
 
-Installs the newest version system-wide with pacman, so it shows up in your app menu and updates the same way.
+Installs the newest version with pacman, so it shows up in your app menu. To update later, run the same command again.
 Remove it with `sudo pacman -R runfjord`.
 
 ### Any Linux — one command
@@ -103,16 +103,18 @@ Requires [Node.js](https://nodejs.org/) 20 or newer.
 npm install
 npm start                # run in development
 npm run check            # verify every translation is complete
-npm run dist:linux       # build the AppImage into dist/
+npm run dist:linux       # build the AppImage and the Arch package into dist/
 npm run dist:win         # build the Windows app folder into dist/win-unpacked
 ```
+
+Publishing a release is automatic: raise `version` in `package.json` and push to `main`.
 
 The Windows installer is made with [NSIS](https://nsis.sourceforge.io/) from `installer/runfjord.nsi`:
 
 ```bash
 npm run dist:win
 node tools/gen-installer-langs.js
-makensis /DVERSION=1.4.0 installer/runfjord.nsi   # → dist/Runfjord-Setup-1.4.0.exe
+makensis /DVERSION=1.4.3 installer/runfjord.nsi   # → dist/Runfjord-Setup-1.4.3.exe
 ```
 
 Pushing a tag like `v1.4.0` runs the [release workflow](.github/workflows/release.yml), which builds both downloads on GitHub and attaches them to a new release.
