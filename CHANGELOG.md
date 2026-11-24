@@ -3,6 +3,16 @@
 All notable changes to Runfjord. The format follows [Keep a Changelog](https://keepachangelog.com/),
 and versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.6.0] - 2026-11-24
+
+### Added
+- **Select several scripts and remove them at once**: the new select button above the list (or Ctrl+click on a card, or *Select* in the right-click menu) shows tick boxes, with *Select all*, *Select none* and *Remove*. <kbd>Ctrl</kbd>+<kbd>A</kbd> selects all, <kbd>Delete</kbd> removes, <kbd>Esc</kbd> stops selecting.
+- **Settings → Clean up → Remove all scripts** empties the library after asking first. Categories and settings are kept.
+- Removing only takes scripts out of the library — the files on your disk are never deleted.
+
+### Changed
+- App ID is now `io.github.lastjaegerva.runfjord`.
+
 ## [1.5.2] - 2026-11-24
 
 ### Changed
@@ -83,6 +93,7 @@ and versions follow [Semantic Versioning](https://semver.org/).
 - First release: script library with descriptions, categories, tags and favourites; one-click running with live
   output; run in terminal; built-in code editor; new-script templates; search and sorting; export/import.
 
+[1.6.0]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.6.0
 [1.5.2]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.5.2
 [1.5.1]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.5.1
 [1.5.0]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.5.0

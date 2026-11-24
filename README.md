@@ -26,6 +26,7 @@
 - **Never forget what a script does** — every script gets a *What it does* and a *What it's for* note. Descriptions are read automatically from the comment at the top of the file.
 - **Run with one click** — live output (errors in red), send input, stop at any time. *Run in terminal* for scripts that need `sudo` or ask questions.
 - **Organise** — categories (drag cards onto them), tags, favourites, icons, search and sorting.
+- **Clean up fast** — the select button (or <kbd>Ctrl</kbd>+click) lets you tick several scripts and remove them in one go; <kbd>Delete</kbd> removes the selected script; *Settings → Clean up → Remove all scripts* empties the library. Only the library entries go — your script files are never deleted.
 - **Built-in code editor** and templates for new scripts (Bash, Python, JavaScript, PowerShell, Batch, Fish).
 - **Runs almost anything** — `.sh` `.bash` `.zsh` `.fish` `.py` `.js` `.ts` `.ps1` `.bat` `.cmd` `.rb` `.pl` `.lua` `.php` and any executable, or set your own command (e.g. `sudo bash {file}`).
 - **10 themes** — Midnight, Daylight, Nordlys, Fjord, Forest, Ember, Synthwave, Terminal, Paper and High contrast — plus *Auto* and any accent colour.

@@ -40,7 +40,7 @@ const EMOJIS = ['', '⚙️', '🚀', '🧹', '💾', '🔄', '📦', '🔧', '�
 // ---------- state ----------
 let lib = { scripts: [], categories: [], settings: {} };
 const ui = {
-  view: 'all', selectedId: null, search: '', sort: 'name', tab: 'overview',
+  view: 'all', selectedId: null, selecting: false, picked: new Set(), search: '', sort: 'name', tab: 'overview',
   outputs: {}, running: new Set(), exitInfo: {}, missing: new Set(), code: {},
   platform: 'linux',
 };
@@ -224,6 +224,7 @@ function viewTitle() {
 
 function renderList() {
   $('#listTitle').textContent = viewTitle();
+  renderSelBar();
   const arr = visibleScripts();
   const list = $('#list');
   if (!arr.length) {
@@ -241,7 +242,9 @@ function renderList() {
     if (s.category && !ui.view.startsWith('cat:')) chips.push(`<span class="chip cat" style="--c:${catColor(s.category)}">${esc(s.category)}</span>`);
     (s.tags || []).slice(0, 3).forEach((t) => chips.push(`<span class="chip">#${esc(t)}</span>`));
     if (ui.missing.has(s.id)) chips.push(`<span class="chip warn">${t('file_missing')}</span>`);
-    return `<div class="card ${s.id === ui.selectedId ? 'selected' : ''}" data-id="${s.id}" draggable="true">
+    const pk = ui.picked.has(s.id);
+    return `<div class="card ${s.id === ui.selectedId && !ui.selecting ? 'selected' : ''} ${pk ? 'picked' : ''}" data-id="${s.id}" draggable="${!ui.selecting}">
+      ${ui.selecting ? `<span class="pick-box">${pk ? icon('<path d="M6 12.5l4 4 8-9"/>') : ''}</span>` : ''}
       ${badgeHTML(s)}
       <div class="meta">
         <div class="name"><span>${esc(s.name)}</span></div>
@@ -1023,6 +1026,9 @@ function openSettings() {
       <div class="field"><label>${t('backup')}</label>
         <div style="display:flex;gap:8px"><button class="btn" id="stExport">${icon(I.save)} ${t('export_lib')}</button><button class="btn" id="stImport">${icon(I.open)} ${t('import_lib')}</button></div>
         <div class="hint">${t('backup_hint')}</div></div>
+      <div class="field"><label>${t('cleanup')}</label>
+        <div><button class="btn btn-danger" id="stRemoveAll" ${lib.scripts.length ? '' : 'disabled'}>${icon(I.trash)} ${t('remove_all')}</button></div>
+        <div class="hint">${t('cleanup_hint')}</div></div>
     </div>
     <div class="m-foot"><span class="left">Runfjord v${esc(ui.version || '1.0.0')}</span><button class="btn btn-primary" data-close>${t('done')}</button></div>`;
   openModal(html, 'wide');
@@ -1043,6 +1049,7 @@ function openSettings() {
     st.language = e.target.value; persist(); applyLanguage(); renderAll();
     closeModal(); openSettings();
   });
+  $('#stRemoveAll').onclick = async () => { closeModal(); await removeAll(); };
   $('#stExport').onclick = async () => { const p = await api.exportLib(JSON.stringify(lib, null, 2)); if (p) toast(t('lib_exported'), 'ok'); };
   $('#stImport').onclick = async () => {
     const txt = await api.importLib(); if (!txt) return;
@@ -1076,6 +1083,7 @@ function showContext(x, y, id) {
     <button data-c="folder">${icon(I.folder)} ${t('show_folder')}</button>
     <button data-c="copypath">${icon(I.copy)} ${t('copy_path')}</button>
     <hr>
+    <button data-c="pick">${icon('<rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12.5l3 3 5-6"/>')} ${t('select_btn')}</button>
     <button data-c="remove" class="danger">${icon(I.trash)} ${t('remove_from_lib')}</button>`;
   document.body.appendChild(m);
   const r = m.getBoundingClientRect();
@@ -1101,6 +1109,7 @@ async function doAction(act, id = ui.selectedId) {
     case 'fav': return toggleFav(id);
     case 'dup': return duplicateScript(id);
     case 'remove': return removeScript(id);
+    case 'pick': return togglePick(id);
     case 'openext': { const err = await api.openFile(s.path); if (err) toast(err, 'err'); return; }
     case 'folder': return api.showInFolder(s.path);
     case 'copypath': navigator.clipboard.writeText(s.path); return toast(t('path_copied'));
@@ -1169,12 +1178,15 @@ $('#cats').addEventListener('drop', (e) => {
 });
 
 $('#list').addEventListener('click', (e) => {
+  const card = e.target.closest('.card');
+  // pick mode: a click (or Ctrl/Cmd+click anywhere) marks the card instead of opening it
+  if (card && (ui.selecting || ((e.ctrlKey || e.metaKey) && !e.target.closest('button')))) { e.stopPropagation(); return togglePick(card.dataset.id); }
   const star = e.target.closest('[data-star]'); if (star) { e.stopPropagation(); return toggleFav(star.dataset.star); }
   const run = e.target.closest('[data-run]');
   if (run) { e.stopPropagation(); const id = run.dataset.run; ui.selectedId = id; return ui.running.has(id) ? stopScript(id) : runScript(id); }
   const c = e.target.closest('.card'); if (c) select(c.dataset.id);
 });
-$('#list').addEventListener('dblclick', (e) => { const c = e.target.closest('.card'); if (c && !e.target.closest('button')) runScript(c.dataset.id); });
+$('#list').addEventListener('dblclick', (e) => { if (ui.selecting) return; const c = e.target.closest('.card'); if (c && !e.target.closest('button')) runScript(c.dataset.id); });
 $('#list').addEventListener('contextmenu', (e) => { const c = e.target.closest('.card'); if (!c) return; e.preventDefault(); select(c.dataset.id); showContext(e.clientX, e.clientY, c.dataset.id); });
 $('#detail').addEventListener('click', (e) => {
   const tab = e.target.closest('[data-tab]'); if (tab) { ui.tab = tab.dataset.tab; renderDetail(); return; }
@@ -1199,7 +1211,7 @@ document.addEventListener('keydown', (e) => {
   const mod = e.ctrlKey || e.metaKey;
   const inField = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName);
   const modalOpen = $('#modalBackdrop').classList.contains('show');
-  if (e.key === 'Escape') { if ($('#ctx')) return closeContext(); if (modalOpen) return closeModal(); }
+  if (e.key === 'Escape') { if ($('#ctx')) return closeContext(); if (modalOpen) return closeModal(); if (ui.selecting) return setSelecting(false); }
   if (modalOpen) return;
   if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); if (ui.selectedId) saveCode(ui.selectedId); return; }
   if (mod && e.shiftKey && e.key.toLowerCase() === 'n') { e.preventDefault(); return openNewScript(); }
@@ -1212,8 +1224,57 @@ document.addEventListener('keydown', (e) => {
   if (inField) return;
   if (e.key === 'ArrowDown') { e.preventDefault(); moveSel(1); }
   if (e.key === 'ArrowUp') { e.preventDefault(); moveSel(-1); }
+  if (ui.selecting && mod && e.key.toLowerCase() === 'a') { e.preventDefault(); return pickAll(true); }
+  if (e.key === 'Delete' && ui.selecting) return removePicked();
   if (e.key === 'Delete' && ui.selectedId) removeScript(ui.selectedId);
 });
+
+// ---------- select several scripts / remove many at once ----------
+function setSelecting(on) {
+  ui.selecting = on; if (!on) ui.picked.clear();
+  closeContext(); renderList();
+}
+function togglePick(id) {
+  if (!ui.selecting) ui.selecting = true;
+  ui.picked.has(id) ? ui.picked.delete(id) : ui.picked.add(id);
+  renderList();
+}
+function pickAll(on) {
+  if (on) visibleScripts().forEach((s) => ui.picked.add(s.id)); else ui.picked.clear();
+  renderList();
+}
+function renderSelBar() {
+  $('#btnSelect').classList.toggle('on', ui.selecting);
+  $('.list-pane').classList.toggle('selecting', ui.selecting);
+  $('#selBar').classList.toggle('show', ui.selecting);
+  $('#selCount').textContent = t('sel_count', { n: ui.picked.size });
+  $('#selRemove').disabled = !ui.picked.size;
+}
+function removeIds(ids) {
+  const set = new Set(ids);
+  for (const id of set) { if (ui.running.has(id)) api.stop(id); delete ui.code[id]; delete ui.outputs[id]; }
+  lib.scripts = lib.scripts.filter((s) => !set.has(s.id));
+  if (set.has(ui.selectedId)) ui.selectedId = null;
+  persist();
+}
+async function removePicked() {
+  const ids = [...ui.picked].filter((id) => getScript(id)); if (!ids.length) return;
+  if (ids.length === 1) { const s = getScript(ids[0]); if (!(await confirmDialog(t('remove_q'), t('remove_text', { name: s.name }), t('remove')))) return; }
+  else if (!(await confirmDialog(t('remove_n_q'), t('remove_n_text', { n: ids.length }), t('remove')))) return;
+  removeIds(ids); ui.selecting = false; ui.picked.clear(); renderAll();
+  toast(t('removed_n', { n: ids.length }), 'ok');
+}
+async function removeAll() {
+  const n = lib.scripts.length; if (!n) return;
+  if (!(await confirmDialog(t('remove_all_q'), t('remove_all_text', { n }), t('remove_all')))) return;
+  removeIds(lib.scripts.map((s) => s.id)); ui.selecting = false; ui.picked.clear(); renderAll();
+  toast(t('removed_n', { n }), 'ok');
+}
+$('#btnSelect').onclick = () => setSelecting(!ui.selecting);
+$('#selAll').onclick = () => pickAll(true);
+$('#selNone').onclick = () => pickAll(false);
+$('#selRemove').onclick = removePicked;
+$('#selDone').onclick = () => setSelecting(false);
 
 // file drag & drop from OS
 let dragDepth = 0;

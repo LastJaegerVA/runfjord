@@ -53,6 +53,7 @@
       <div class="list-head">
         <div class="list-title-row">
           <h2 id="listTitle">All scripts</h2>
+          <button class="mini-btn sel-toggle" id="btnSelect" data-i18n-title="select_tip"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12.5l3 3 5-6"/></svg></button>
           <select id="sortSel" class="select-sm" data-i18n-title="sort_title">
             <option value="name">Name A–Z</option>
             <option value="recent">Recently run</option>
@@ -67,6 +68,14 @@
         </div>
       </div>
       <div class="list" id="list" tabindex="0"></div>
+      <div class="sel-bar" id="selBar">
+        <span id="selCount"></span>
+        <span class="grow"></span>
+        <button class="btn btn-ghost btn-sm" id="selAll" data-i18n="scan_all">Select all</button>
+        <button class="btn btn-ghost btn-sm" id="selNone" data-i18n="scan_none_sel">Select none</button>
+        <button class="btn btn-danger btn-sm" id="selRemove"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg> <span data-i18n="remove">Remove</span></button>
+        <button class="btn btn-sm" id="selDone" data-i18n="cancel">Cancel</button>
+      </div>
     </section>
 
     <!-- ============ DETAIL ============ -->
