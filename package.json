@@ -1,0 +1,68 @@
+{
+  "name": "runfjord",
+  "productName": "Runfjord",
+  "version": "1.4.0",
+  "description": "Keep all your scripts in one library, with a note on what each one does, and run them with one click.",
+  "main": "main.js",
+  "author": "Jonas Olsen-Sund",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "check": "node tools/check-locales.js",
+    "dist:linux": "electron-builder --linux AppImage",
+    "dist:win": "electron-builder --win dir --x64"
+  },
+  "build": {
+    "appId": "no.jonas.runfjord",
+    "productName": "Runfjord",
+    "icon": "build/icon.png",
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "build/icon.png",
+      "build/icons/**/*",
+      "LICENSE"
+    ],
+    "linux": {
+      "target": "AppImage",
+      "category": "Utility",
+      "syncDesktopName": true,
+      "artifactName": "Runfjord-${version}-x86_64.AppImage",
+      "icon": "build/icons"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "Runfjord-Setup-${version}.exe",
+      "createDesktopShortcut": true
+    },
+    "portable": {
+      "artifactName": "Runfjord-${version}-Windows-Portable.exe"
+    },
+    "publish": null,
+    "executableName": "runfjord"
+  },
+  "devDependencies": {
+    "electron": "^45.4.1",
+    "electron-builder": "^26.18.0"
+  },
+  "desktopName": "runfjord.desktop",
+  "keywords": [
+    "scripts",
+    "script-manager",
+    "launcher",
+    "electron",
+    "bash",
+    "powershell",
+    "python",
+    "desktop"
+  ]
+}

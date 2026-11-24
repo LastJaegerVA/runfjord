@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;" />
+  <title>Runfjord</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- ============ SIDEBAR ============ -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:color-mix(in srgb, var(--accent) 55%, #ffffff)"/><stop offset="1" style="stop-color:var(--accent)"/></linearGradient><clipPath id="lg1c"><rect width="64" height="64" rx="15"/></clipPath></defs><g clip-path="url(#lg1c)"><rect width="64" height="64" fill="#0c1222"/><g fill="none" stroke-linecap="round" stroke-width="1.6" style="stroke:var(--accent)" stroke-opacity=".45"><path d="M0 12 C8 12 13 13.5 18 15 L60 26"/><path d="M0 52 C8 52 13 50.5 18 49 L60 38"/></g><path d="M0 18 C6 18 11 19.5 16 21 L50 29.5 Q54 32 50 34.5 L16 43 C11 44.5 6 46 0 46 Z" fill="url(#lg1)"/><rect x="7" y="27" width="18" height="3.4" rx="1.7" fill="#fff" fill-opacity=".92"/><rect x="7" y="33.6" width="12" height="3.4" rx="1.7" fill="#fff" fill-opacity=".6"/></g></svg></div>
+        <div>
+          <div class="brand-name">Runfjord</div>
+          <div class="brand-sub" id="brandSub"></div>
+        </div>
+      </div>
+
+      <div class="add-group">
+        <button class="btn btn-primary btn-block" id="btnAdd" data-i18n-title="add_scripts_tip">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg> <span data-i18n="add_scripts">Add scripts</span>
+        </button>
+        <button class="btn btn-ghost btn-icon" id="btnNew" data-i18n-title="create_new_tip">
+          <svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5M12 12v6M9 15h6" /></svg>
+        </button>
+      </div>
+
+      <nav class="nav" id="nav">
+        <button class="nav-item active" data-view="all"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span data-i18n="nav_all">All scripts</span><em id="cntAll">0</em></button>
+        <button class="nav-item" data-view="fav"><svg viewBox="0 0 24 24"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg><span data-i18n="nav_fav">Favorites</span><em id="cntFav">0</em></button>
+        <button class="nav-item" data-view="recent"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span data-i18n="nav_recent">Recently run</span><em id="cntRecent">0</em></button>
+        <button class="nav-item" data-view="running"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg><span data-i18n="nav_running">Running</span><em id="cntRunning" class="live">0</em></button>
+      </nav>
+
+      <div class="section-head">
+        <span data-i18n="categories">Categories</span>
+        <button class="mini-btn" id="btnAddCat" data-i18n-title="new_category"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+      </div>
+      <div class="cats" id="cats"></div>
+
+      <div class="sidebar-foot">
+        <button class="nav-item" id="btnSettings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span data-i18n="settings">Settings</span></button>
+      </div>
+    </aside>
+
+    <!-- ============ LIST ============ -->
+    <section class="list-pane">
+      <div class="list-head">
+        <div class="list-title-row">
+          <h2 id="listTitle">All scripts</h2>
+          <select id="sortSel" class="select-sm" data-i18n-title="sort_title">
+            <option value="name">Name A–Z</option>
+            <option value="recent">Recently run</option>
+            <option value="used">Most used</option>
+            <option value="added">Newest added</option>
+          </select>
+        </div>
+        <div class="search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input id="search" data-i18n-ph="search_ph" spellcheck="false" />
+          <kbd id="searchKbd">Ctrl F</kbd>
+        </div>
+      </div>
+      <div class="list" id="list" tabindex="0"></div>
+    </section>
+
+    <!-- ============ DETAIL ============ -->
+    <main class="detail" id="detail"></main>
+  </div>
+
+  <div class="drop-overlay" id="dropOverlay">
+    <div class="drop-box">
+      <svg viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>
+      <div data-i18n="drop_here">Drop scripts to add them</div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop"><div class="modal" id="modal"></div></div>
+  <div class="toasts" id="toasts"></div>
+
+  <script src="i18n.js"></script>
+  <script src="locales/en.js"></script>
+  <script src="locales/ar.js"></script>
+  <script src="locales/bg.js"></script>
+  <script src="locales/bn.js"></script>
+  <script src="locales/cs.js"></script>
+  <script src="locales/da.js"></script>
+  <script src="locales/de.js"></script>
+  <script src="locales/el.js"></script>
+  <script src="locales/es.js"></script>
+  <script src="locales/fa.js"></script>
+  <script src="locales/fi.js"></script>
+  <script src="locales/fr.js"></script>
+  <script src="locales/he.js"></script>
+  <script src="locales/hi.js"></script>
+  <script src="locales/hr.js"></script>
+  <script src="locales/hu.js"></script>
+  <script src="locales/id.js"></script>
+  <script src="locales/it.js"></script>
+  <script src="locales/ja.js"></script>
+  <script src="locales/ko.js"></script>
+  <script src="locales/ms.js"></script>
+  <script src="locales/nb.js"></script>
+  <script src="locales/nl.js"></script>
+  <script src="locales/pl.js"></script>
+  <script src="locales/pt.js"></script>
+  <script src="locales/ro.js"></script>
+  <script src="locales/ru.js"></script>
+  <script src="locales/sv.js"></script>
+  <script src="locales/sw.js"></script>
+  <script src="locales/th.js"></script>
+  <script src="locales/tr.js"></script>
+  <script src="locales/uk.js"></script>
+  <script src="locales/vi.js"></script>
+  <script src="locales/zh-CN.js"></script>
+  <script src="locales/zh-TW.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

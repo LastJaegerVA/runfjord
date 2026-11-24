@@ -1,0 +1,26 @@
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
+
+contextBridge.exposeInMainWorld('api', {
+  loadLibrary: () => ipcRenderer.invoke('lib:load'),
+  saveLibrary: (lib) => ipcRenderer.invoke('lib:save', lib),
+  sysInfo: () => ipcRenderer.invoke('sys:info'),
+  setLanguage: (code) => ipcRenderer.invoke('i18n:set', code),
+  pickFiles: () => ipcRenderer.invoke('dlg:pickFiles'),
+  pickFolder: () => ipcRenderer.invoke('dlg:pickFolder'),
+  saveNew: (name) => ipcRenderer.invoke('dlg:saveNew', name),
+  exportLib: (json) => ipcRenderer.invoke('dlg:export', json),
+  importLib: () => ipcRenderer.invoke('dlg:import'),
+  readFile: (p) => ipcRenderer.invoke('fs:read', p),
+  writeFile: (p, c) => ipcRenderer.invoke('fs:write', p, c),
+  exists: (paths) => ipcRenderer.invoke('fs:exists', paths),
+  stat: (p) => ipcRenderer.invoke('fs:stat', p),
+  openFile: (p) => ipcRenderer.invoke('shell:openFile', p),
+  showInFolder: (p) => ipcRenderer.invoke('shell:showInFolder', p),
+  preview: (s) => ipcRenderer.invoke('run:preview', s),
+  run: (s) => ipcRenderer.invoke('run:start', s),
+  stdin: (id, text) => ipcRenderer.invoke('run:stdin', id, text),
+  stop: (id) => ipcRenderer.invoke('run:stop', id),
+  runInTerminal: (s) => ipcRenderer.invoke('run:terminal', s),
+  onRunEvent: (cb) => ipcRenderer.on('run:event', (_e, ev) => cb(ev)),
+  pathForFile: (file) => webUtils.getPathForFile(file),
+});
