@@ -31,7 +31,8 @@
 - **Runs almost anything** — `.sh` `.bash` `.zsh` `.fish` `.py` `.js` `.ts` `.ps1` `.bat` `.cmd` `.rb` `.pl` `.lua` `.php` and any executable, or set your own command (e.g. `sudo bash {file}`).
 - **18 themes** — Midnight, Daylight, Nordlys, Fjord, Forest, Ember, Synthwave, Terminal, Paper and High contrast, plus eight with a matching wallpaper: Fjord Night, Dawn, Deep Sea, Nebula, Dunes, Glacier, Blossom and Moss. *Auto* follows your system, any accent colour works, and any wallpaper can be used with any theme (or none).
 - **35 languages** — picked automatically from your computer's language, with full right-to-left layout for Arabic, Hebrew and Persian.
-- **Your data stays yours** — no account, no network access, no telemetry. Export/import your library as a `.json` backup.
+- **One-click updates** — when a new version is on GitHub, a notice appears in the sidebar; one click downloads it, checks it against GitHub's checksum and installs it (Windows installer, AppImage, or pacman with your password). It only checks once a day and can be turned off in *Settings → Updates*.
+- **Your data stays yours** — no account, no telemetry. The only network access is the once-a-day update check on GitHub, which you can turn off. Export/import your library as a `.json` backup.
 
 <p align="center">
   <img src="docs/screenshots/run-output.png" alt="Live output from a running script" width="49%">
@@ -43,10 +44,10 @@
 ### Arch / CachyOS / Manjaro — one command
 
 ```bash
-curl -fLo /tmp/runfjord.pkg.tar.xz https://github.com/LastJaegerVA/runfjord/releases/latest/download/runfjord-x86_64.pkg.tar.xz && sudo pacman -U /tmp/runfjord.pkg.tar.xz
+curl -fLo /tmp/runfjord.pkg.tar.xz https://github.com/LastJaegerVA/runfjord/releases/latest/download/Runfjord-Linux-Arch-x86_64.pkg.tar.xz && sudo pacman -U /tmp/runfjord.pkg.tar.xz
 ```
 
-Downloads the newest package and installs it with pacman, so it shows up in your app menu. (It downloads first because pacman refuses unsigned packages given as a web link.) To update later, run the same command again.
+Downloads the newest package and installs it with pacman, so it shows up in your app menu. (It downloads first because pacman refuses unsigned packages given as a web link.) To update later, press **Update** in the app when it tells you about a new version (or run the same command again).
 Remove it with `sudo pacman -R runfjord`.
 
 ### Any Linux — one command
@@ -68,9 +69,9 @@ Get the latest version from the [**Releases**](../../releases/latest) page.
 
 | System | File | How to install |
 |---|---|---|
-| **Windows 10/11** | `Runfjord-Setup-x.y.z.exe` | Run it. Installs for your user (no admin rights needed), adds Start menu and desktop shortcuts, and can be removed from *Settings → Apps*. |
-| **Arch / CachyOS / Manjaro** | `runfjord-x86_64.pkg.tar.xz` | In the folder you saved it to: `sudo pacman -U runfjord-x86_64.pkg.tar.xz`. Adds Runfjord to your app menu; remove with `sudo pacman -R runfjord`. |
-| **Any Linux** (x86-64) | `Runfjord-x.y.z-x86_64.AppImage` | Use the command above, or `chmod +x Runfjord-*.AppImage` and double-click it. Works on most distributions (Arch/CachyOS, Ubuntu, Fedora, …). |
+| **Windows 10/11** | `Runfjord-Windows-Setup-x.y.z.exe` | Run it. Installs for your user (no admin rights needed), adds Start menu and desktop shortcuts, and can be removed from *Settings → Apps*. |
+| **Arch / CachyOS / Manjaro** | `Runfjord-Linux-Arch-x86_64.pkg.tar.xz` | In the folder you saved it to: `sudo pacman -U Runfjord-Linux-Arch-x86_64.pkg.tar.xz`. Adds Runfjord to your app menu; remove with `sudo pacman -R runfjord`. |
+| **Any Linux** (x86-64) | `Runfjord-Linux-x.y.z-x86_64.AppImage` | Use the command above, or `chmod +x Runfjord-*.AppImage` and double-click it. Works on most distributions (Arch/CachyOS, Ubuntu, Fedora, …). |
 
 > **Windows SmartScreen** may warn the first time, because the installer isn't code-signed. Click **More info → Run anyway**.
 
@@ -116,7 +117,7 @@ The Windows installer is made with [NSIS](https://nsis.sourceforge.io/) from `in
 ```bash
 npm run dist:win
 node tools/gen-installer-langs.js
-makensis /DVERSION=1.4.3 installer/runfjord.nsi   # → dist/Runfjord-Setup-1.4.3.exe
+makensis /DVERSION=1.8.0 installer/runfjord.nsi   # → dist/Runfjord-Windows-Setup-1.8.0.exe
 ```
 
 Pushing a tag like `v1.4.0` runs the [release workflow](.github/workflows/release.yml), which builds both downloads on GitHub and attaches them to a new release.

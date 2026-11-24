@@ -25,5 +25,9 @@ contextBridge.exposeInMainWorld('api', {
   scanDefaults: () => ipcRenderer.invoke('scan:defaults'),
   scan: (roots) => ipcRenderer.invoke('scan:run', roots),
   onScanProgress: (cb) => ipcRenderer.on('scan:progress', (_e, n) => cb(n)),
+  checkUpdate: () => ipcRenderer.invoke('update:check'),
+  installUpdate: () => ipcRenderer.invoke('update:install'),
+  openReleasePage: () => ipcRenderer.invoke('update:openPage'),
+  onUpdateProgress: (cb) => ipcRenderer.on('update:progress', (_e, f) => cb(f)),
   pathForFile: (file) => webUtils.getPathForFile(file),
 });

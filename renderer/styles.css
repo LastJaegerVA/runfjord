@@ -404,3 +404,21 @@ body, .app, .sidebar, .list-pane, .detail, .card, .box, .search, .modal { transi
 [data-wall="on"] .sel-bar { background: color-mix(in srgb, var(--bg2) 85%, transparent); }
 .tp.has-wall .tp-side { opacity: .86; }
 .tp.has-wall .tp-card { opacity: .93; }
+
+/* ---------- updates ---------- */
+.update-banner { display: none; margin: 8px 0 4px; padding: 11px 12px; border-radius: 12px; border: 1px solid var(--accent-line); background: var(--accent-soft); }
+.update-banner.show { display: block; }
+.ub-text { display: flex; gap: 9px; align-items: center; font-size: 13px; font-weight: 600; color: var(--text); }
+.ub-text svg { width: 17px; height: 17px; color: var(--accent); }
+.ub-btns { display: flex; gap: 6px; margin-top: 9px; }
+.m-foot .grow { flex: 1; }
+.upd-cur { margin: 0 0 14px; color: var(--text2); }
+.upd-notes { margin: 0; max-height: 220px; overflow: auto; white-space: pre-wrap; font-family: var(--font); font-size: 13px; line-height: 1.55; color: var(--text2); background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; user-select: text; unicode-bidi: plaintext; }
+.upd-prog { display: none; margin-top: 14px; }
+.upd-prog.show { display: block; }
+.upd-track { height: 8px; border-radius: 8px; background: var(--panel2); border: 1px solid var(--line); overflow: hidden; }
+.upd-bar { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+#updStatus { margin-top: 7px; font-size: 12.5px; color: var(--text2); }
+.upd-manual { margin-top: 14px; }
+.upd-manual[hidden] { display: none; }
+.upd-cmd { margin: 6px 0 8px; padding: 10px 12px; border-radius: 9px; background: var(--console); color: var(--console-text); font-family: var(--mono); font-size: 12px; white-space: pre-wrap; word-break: break-all; user-select: text; }

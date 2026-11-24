@@ -1044,6 +1044,10 @@ function openSettings() {
           ${window.I18N.LANGUAGES.map((l) => `<option value="${l.code}" ${st.language === l.code ? 'selected' : ''}>${esc(l.name)}</option>`).join('')}
         </select>
         <div class="hint">${t('lang_hint')}</div></div>
+      <div class="field"><label>${t('updates')}</label>
+        <label class="check"><input type="checkbox" id="stUpdAuto" ${st.updAuto === false ? '' : 'checked'}> ${t('upd_auto')}</label>
+        <div style="display:flex;gap:8px;margin-top:8px;align-items:center"><button class="btn" id="stUpdNow">${t('upd_check_now')}</button><span class="hint" style="margin:0">Runfjord v${esc(ui.version || '')}</span></div>
+        <div class="hint">${t('upd_hint')}</div></div>
       <div class="field"><label>${t('backup')}</label>
         <div style="display:flex;gap:8px"><button class="btn" id="stExport">${icon(I.save)} ${t('export_lib')}</button><button class="btn" id="stImport">${icon(I.open)} ${t('import_lib')}</button></div>
         <div class="hint">${t('backup_hint')}</div></div>
@@ -1053,6 +1057,8 @@ function openSettings() {
     </div>
     <div class="m-foot"><span class="left">Runfjord v${esc(ui.version || '1.0.0')}</span><button class="btn btn-primary" data-close>${t('done')}</button></div>`;
   openModal(html, 'wide');
+  $('#stUpdAuto').onchange = (e) => { st.updAuto = e.target.checked; persist(); };
+  $('#stUpdNow').onclick = async () => { const r = await checkUpdate(true); if (r?.newer) { closeModal(); openUpdateDialog(); } };
   $('#stWall').onchange = (e) => { st.wallpaper = e.target.value; applySettings(); persist(); };
   $('#stThemes').onclick = (e) => {
     const b = e.target.closest('.theme-card'); if (!b) return;
@@ -1321,6 +1327,68 @@ window.addEventListener('focus', async () => {
 });
 
 // ================================================================
+// updates — one button, only from GitHub, only when the user clicks
+// ================================================================
+const verNum = (v) => String(v || '').replace(/^v/, '').split(/[.-]/).slice(0, 3).map((n) => parseInt(n, 10) || 0);
+const verNewer = (a, b) => { const x = verNum(a), y = verNum(b); for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] > y[i]; return false; };
+let updInfo = null, updBusy = false;
+api.onUpdateProgress((f) => { const bar = $('#updBar'); if (bar) { bar.style.width = Math.round(f * 100) + '%'; $('#updStatus').textContent = f >= 1 ? t('upd_installing') : t('upd_downloading', { p: Math.round(f * 100) }); } });
+
+function renderUpdateBanner() {
+  const b = $('#updBanner'); const st = lib.settings;
+  const show = updInfo?.newer && st.updSkip !== updInfo.latest;
+  b.classList.toggle('show', !!show);
+  b.innerHTML = show ? `<div class="ub-text">${icon('<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>')}<span>${esc(t('upd_available', { v: updInfo.latest }))}</span></div>
+    <div class="ub-btns"><button class="btn btn-primary btn-sm" id="ubGo">${t('upd_btn')}</button><button class="btn btn-ghost btn-sm" id="ubLater">${t('upd_later')}</button></div>` : '';
+  if (show) { $('#ubGo').onclick = openUpdateDialog; $('#ubLater').onclick = () => { st.updSkip = updInfo.latest; persist(); renderUpdateBanner(); }; }
+}
+async function checkUpdate(manual) {
+  const r = await api.checkUpdate();
+  lib.settings.updLastCheck = Date.now(); persist();
+  if (!r.ok) { if (manual) toast(t('upd_check_failed'), 'err'); return null; }
+  updInfo = r;
+  if (manual && r.newer) { lib.settings.updSkip = ''; persist(); }
+  renderUpdateBanner();
+  if (manual && !r.newer) toast(t('upd_none', { v: r.current }), 'ok');
+  return r;
+}
+function autoCheckUpdate() {
+  if (lib.settings.updAuto === false) return;
+  const day = 20 * 3600 * 1000;
+  // checks at most about once a day; the result is kept so the notice survives a restart
+  if (lib.settings.updLatest && verNewer(lib.settings.updLatest, ui.version)) { updInfo = { newer: true, latest: lib.settings.updLatest, current: ui.version }; renderUpdateBanner(); }
+  if (Date.now() - (lib.settings.updLastCheck || 0) < day) return;
+  setTimeout(async () => { const r = await checkUpdate(false); if (r) { lib.settings.updLatest = r.latest; persist(); } }, 4000);
+}
+async function openUpdateDialog() {
+  if (!updInfo?.kind) { const r = await checkUpdate(true); if (!r || !r.newer) return; }
+  const u = updInfo; const canBtn = u.canInstall && ['windows', 'appimage', 'pacman'].includes(u.kind);
+  openModal(`
+    <div class="m-head"><h2>${esc(t('upd_title', { v: u.latest }))}</h2></div>
+    <div class="m-body">
+      <p class="upd-cur">${esc(t('upd_current', { v: u.current }))}</p>
+      ${u.notes ? `<div class="field"><label>${t('upd_whats_new')}</label><pre class="upd-notes">${esc(u.notes)}</pre></div>` : ''}
+      ${canBtn ? `<div class="hint">${u.kind === 'pacman' ? esc(t('upd_pw_note')) + ' ' : ''}${esc(t('upd_verify_note'))}</div>
+        <div class="upd-prog" id="updProg"><div class="upd-track"><div class="upd-bar" id="updBar"></div></div><div id="updStatus"></div></div>` : ''}
+      <div class="upd-manual" id="updManual" ${canBtn && u.kind !== 'pacman' ? 'hidden' : ''}>
+        ${u.command ? `<div class="hint">${esc(t('upd_manual'))}</div><pre class="upd-cmd" dir="ltr">${esc(u.command)}</pre><button class="btn btn-sm" id="updCopy">${icon(I.copy)} ${t('upd_copy')}</button>` : ''}
+      </div>
+    </div>
+    <div class="m-foot"><button class="btn" id="updPage">${t('upd_page')}</button><span class="grow"></span><button class="btn" data-close>${t('cancel')}</button>
+      ${canBtn ? `<button class="btn btn-primary" id="updNow">${icon('<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>')} ${t('upd_now')}</button>` : ''}</div>`, 'wide');
+  $('#updPage').onclick = () => api.openReleasePage();
+  $('#updCopy') && ($('#updCopy').onclick = () => { navigator.clipboard.writeText(u.command); toast(t('upd_copied'), 'ok'); });
+  $('#updNow') && ($('#updNow').onclick = async () => {
+    if (updBusy) return; updBusy = true;
+    $('#updNow').disabled = true; $('#updProg').classList.add('show'); $('#updStatus').textContent = t('upd_downloading', { p: 0 });
+    const r = await api.installUpdate(); updBusy = false;
+    if (!r.ok) {
+      $('#updNow').disabled = false; $('#updProg').classList.remove('show'); $('#updManual').hidden = false;
+      toast(t('upd_failed', { err: r.error }), 'err');
+    }
+  });
+}
+// ================================================================
 // boot
 // ================================================================
 (async function boot() {
@@ -1336,4 +1404,5 @@ window.addEventListener('focus', async () => {
   applyLanguage();
   await checkMissing();
   renderAll();
+  autoCheckUpdate();
 })();

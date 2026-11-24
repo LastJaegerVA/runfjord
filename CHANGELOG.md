@@ -3,6 +3,16 @@
 All notable changes to Runfjord. The format follows [Keep a Changelog](https://keepachangelog.com/),
 and versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.8.0] - 2026-11-24
+
+### Added
+- **One-click updates**: when a new version is out on GitHub, a notice appears in the sidebar. *Update now* downloads it, checks it against GitHub's SHA-256 checksum and installs it — the Windows installer, the AppImage in place, or the Arch package through pacman (asking for your password in the normal system window). Runfjord then restarts.
+- *Settings → Updates*: turn the daily check off, or check now. Runfjord only asks GitHub for its newest version; nothing is downloaded or installed until you click.
+
+### Changed
+- Release files now say which system they are for, so Linux and Windows files are grouped apart: `Runfjord-Linux-<version>-x86_64.AppImage`, `Runfjord-Linux-Arch-x86_64.pkg.tar.xz` and `Runfjord-Windows-Setup-<version>.exe`. The Arch install command uses the new file name.
+- Each release page now starts with what's new.
+
 ## [1.7.0] - 2026-11-24
 
 ### Added
@@ -99,6 +109,7 @@ and versions follow [Semantic Versioning](https://semver.org/).
 - First release: script library with descriptions, categories, tags and favourites; one-click running with live
   output; run in terminal; built-in code editor; new-script templates; search and sorting; export/import.
 
+[1.8.0]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.8.0
 [1.7.0]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.7.0
 [1.6.0]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.6.0
 [1.5.2]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.5.2

@@ -1,7 +1,9 @@
-const { app, BrowserWindow, ipcMain, dialog, shell, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, Menu, net } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { spawn, execSync } = require('child_process');
+const crypto = require('crypto');
+const os = require('os');
 const I18N = require('./renderer/i18n.js');
 const t = I18N.t;
 
@@ -173,6 +175,106 @@ ipcMain.handle('fs:write', (_e, p, content) => {
 });
 ipcMain.handle('fs:exists', (_e, paths) => paths.map((p) => { try { return fs.existsSync(p); } catch { return false; } }));
 ipcMain.handle('fs:stat', (_e, p) => { try { const s = fs.statSync(p); return { size: s.size, mtime: s.mtimeMs }; } catch { return null; } });
+
+// ---------- updates ----------
+// Runfjord only ever talks to GitHub, and only to ask for its own latest release. Nothing is
+// downloaded or installed unless the user clicks "Update", and every download is checked
+// against the SHA-256 checksum GitHub publishes for that file before it is used.
+const REPO = 'LastJaegerVA/runfjord';
+const RELEASES_URL = `https://github.com/${REPO}/releases/latest`;
+const PACMAN_CMD = `curl -fLo /tmp/runfjord.pkg.tar.xz https://github.com/${REPO}/releases/latest/download/Runfjord-Linux-Arch-x86_64.pkg.tar.xz && sudo pacman -U /tmp/runfjord.pkg.tar.xz`;
+
+function installKind() {
+  if (!app.isPackaged) return 'dev';
+  if (isWin) return 'windows';
+  if (process.platform === 'linux' && process.env.APPIMAGE) return 'appimage';
+  if (process.platform === 'linux' && app.getAppPath().startsWith('/opt/')) return 'pacman';
+  return 'other';
+}
+const verParts = (v) => String(v || '').replace(/^v/, '').split(/[.-]/).slice(0, 3).map((n) => parseInt(n, 10) || 0);
+function isNewer(a, b) { const x = verParts(a), y = verParts(b); for (let i = 0; i < 3; i++) { if (x[i] !== y[i]) return x[i] > y[i]; } return false; }
+
+let lastRelease = null;
+// the release text starts with "What's new" (from CHANGELOG.md) and then install steps; keep only the first part
+function releaseNotes(body) {
+  let txt = String(body || '').split(/^#{1,3}\s*(Install|Download)/im)[0];
+  txt = txt.replace(/^#{1,4}\s*What.s new\s*$/im, '').replace(/^#{1,6}\s*/gm, '').replace(/\*\*|__|`/g, '').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\n{3,}/g, '\n\n').trim();
+  return txt.slice(0, 4000);
+}
+async function checkForUpdate() {
+  const res = await net.fetch(`https://api.github.com/repos/${REPO}/releases/latest`, {
+    headers: { Accept: 'application/vnd.github+json', 'User-Agent': `Runfjord/${app.getVersion()}` },
+  });
+  if (!res.ok) throw new Error(`GitHub answered ${res.status}`);
+  const r = await res.json();
+  const latest = String(r.tag_name || '').replace(/^v/, '');
+  const kind = installKind();
+  const want = kind === 'windows' ? /^Runfjord-(Windows-)?Setup-.*\.exe$/i : kind === 'appimage' ? /^Runfjord-.*x86_64\.AppImage$/i : kind === 'pacman' ? /x86_64\.pkg\.tar\.(xz|zst)$/i : null;
+  const asset = want ? (r.assets || []).find((a) => want.test(a.name)) : null;
+  lastRelease = { latest, asset: asset ? { name: asset.name, url: asset.browser_download_url, size: asset.size, digest: asset.digest || '' } : null };
+  return {
+    current: app.getVersion(), latest, newer: isNewer(latest, app.getVersion()), kind,
+    notes: releaseNotes(r.body), url: r.html_url || RELEASES_URL,
+    canInstall: !!(asset && /^sha256:[0-9a-f]{64}$/.test(asset.digest || '')), command: kind === 'pacman' ? PACMAN_CMD : '',
+  };
+}
+
+async function downloadVerified(asset, dest, sender) {
+  const res = await net.fetch(asset.url, { headers: { 'User-Agent': `Runfjord/${app.getVersion()}` } });
+  if (!res.ok || !res.body) throw new Error(`Download failed (${res.status})`);
+  const hash = crypto.createHash('sha256'); const out = fs.createWriteStream(dest); let got = 0, last = 0;
+  const reader = res.body.getReader();
+  try {
+    for (;;) {
+      const { done, value } = await reader.read(); if (done) break;
+      const buf = Buffer.from(value); hash.update(buf); got += buf.length;
+      if (!out.write(buf)) await new Promise((r) => out.once('drain', r));
+      const now = Date.now(); if (now - last > 200) { last = now; sender.send('update:progress', asset.size ? got / asset.size : 0); }
+    }
+  } finally { await new Promise((r) => out.end(r)); }
+  const sum = 'sha256:' + hash.digest('hex');
+  if (sum !== asset.digest) { try { fs.unlinkSync(dest); } catch {} throw new Error('The download did not match GitHub’s checksum, so it was not used.'); }
+  sender.send('update:progress', 1);
+}
+
+async function installUpdate(sender) {
+  const kind = installKind(); const a = lastRelease?.asset;
+  if (!a || !/^sha256:[0-9a-f]{64}$/.test(a.digest)) throw new Error('No verified download for this kind of install.');
+  if (kind === 'windows') {
+    const dest = path.join(os.tmpdir(), a.name.replace(/[^\w.-]/g, '_'));
+    await downloadVerified(a, dest, sender);
+    // start the normal installer (with its usual windows) and close Runfjord so it can replace the files
+    spawn(dest, [], { detached: true, stdio: 'ignore' }).unref();
+    setTimeout(() => app.quit(), 400);
+    return true;
+  }
+  if (kind === 'appimage') {
+    const target = process.env.APPIMAGE; const tmp = target + '.download';
+    await downloadVerified(a, tmp, sender);
+    fs.chmodSync(tmp, 0o755); fs.renameSync(tmp, target);
+    app.relaunch({ execPath: target, args: [] }); setTimeout(() => app.exit(0), 300);
+    return true;
+  }
+  if (kind === 'pacman') {
+    // Arch/CachyOS: pacman owns the files, so pacman does the update. pkexec shows the system's
+    // normal password window; nothing runs as root without the user typing their password there.
+    if (!has('pkexec')) throw new Error('pkexec was not found. Use the command below instead.');
+    const dest = path.join(os.tmpdir(), `runfjord-update-${Date.now()}.pkg.tar.xz`);
+    await downloadVerified(a, dest, sender);
+    const code = await new Promise((resolve) => {
+      const p = spawn('pkexec', ['pacman', '-U', '--noconfirm', dest], { stdio: 'ignore' });
+      p.on('error', () => resolve(-1)); p.on('exit', (c) => resolve(c));
+    });
+    try { fs.unlinkSync(dest); } catch {}
+    if (code !== 0) throw new Error(code === 126 || code === 127 ? 'The password window was closed, so nothing was changed.' : `pacman stopped with code ${code}.`);
+    app.relaunch(); setTimeout(() => app.exit(0), 300);
+    return true;
+  }
+  throw new Error('This install can’t update itself.');
+}
+ipcMain.handle('update:check', async () => { try { return { ok: true, ...(await checkForUpdate()) }; } catch (e) { return { ok: false, error: String(e.message || e) }; } });
+ipcMain.handle('update:install', async (e) => { try { return { ok: await installUpdate(e.sender) }; } catch (err) { return { ok: false, error: String(err.message || err) }; } });
+ipcMain.handle('update:openPage', () => shell.openExternal(RELEASES_URL));
 
 // ---------- find scripts already on this computer ----------
 const SCRIPT_EXT = new Set(['.sh', '.bash', '.zsh', '.fish', '.py', '.js', '.mjs', '.cjs', '.ts', '.rb', '.pl', '.lua', '.php', '.ps1', '.bat', '.cmd']);

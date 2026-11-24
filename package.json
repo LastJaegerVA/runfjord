@@ -1,7 +1,7 @@
 {
   "name": "runfjord",
   "productName": "Runfjord",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "Keep all your scripts in one library, with a note on what each one does, and run them with one click.",
   "main": "main.js",
   "author": {
@@ -45,7 +45,7 @@
       ],
       "category": "Utility",
       "syncDesktopName": true,
-      "artifactName": "Runfjord-${version}-x86_64.AppImage",
+      "artifactName": "Runfjord-Linux-${version}-x86_64.AppImage",
       "icon": "build/icons",
       "maintainer": "LastJaegerVA <LastJaegerVA@users.noreply.github.com>",
       "synopsis": "Keep all your scripts in one place and run them with one click"
@@ -60,7 +60,7 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "artifactName": "Runfjord-Setup-${version}.exe",
+      "artifactName": "Runfjord-Windows-Setup-${version}.exe",
       "createDesktopShortcut": true
     },
     "portable": {
@@ -78,7 +78,7 @@
         "libxtst",
         "xdg-utils"
       ],
-      "artifactName": "runfjord-x86_64.pkg.tar.xz"
+      "artifactName": "Runfjord-Linux-Arch-x86_64.pkg.tar.xz"
     },
     "copyright": "Copyright © 2026 Jonas Olsen-Sund (LastJaegerVA)"
   },

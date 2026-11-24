@@ -23,7 +23,7 @@ ManifestDPIAware true
 !define SRC "..\dist\win-unpacked"
 
 Name "${APPNAME}"
-OutFile "..\dist\Runfjord-Setup-${VERSION}.exe"
+OutFile "..\dist\Runfjord-Windows-Setup-${VERSION}.exe"
 InstallDir "$LOCALAPPDATA\Programs\${APPNAME}"
 InstallDirRegKey HKCU "Software\${APPNAME}" "InstallDir"
 RequestExecutionLevel user

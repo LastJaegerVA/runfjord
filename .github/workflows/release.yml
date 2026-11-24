@@ -2,9 +2,10 @@ name: Release
 
 # A new release is published automatically when the version in package.json goes up
 # (or when a tag like v1.4.2 is pushed). It builds:
-#   - Runfjord-Setup-<version>.exe        Windows installer
-#   - Runfjord-<version>-x86_64.AppImage  any Linux (used by install.sh)
-#   - runfjord-x86_64.pkg.tar.xz          Arch / CachyOS (download, then sudo pacman -U the file)
+#   - Runfjord-Windows-Setup-<version>.exe        Windows installer
+#   - Runfjord-Linux-<version>-x86_64.AppImage    any Linux (used by install.sh)
+#   - Runfjord-Linux-Arch-x86_64.pkg.tar.xz       Arch / CachyOS (download, then sudo pacman -U the file)
+# The system is part of every file name, so GitHub's list keeps the Linux and Windows files apart.
 on:
   push:
     branches: [main]
@@ -95,7 +96,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: windows
-          path: dist/Runfjord-Setup-*.exe
+          path: dist/Runfjord-Windows-Setup-*.exe
 
   release:
     # publish whatever was built — the Linux files still ship if the Windows build fails
@@ -103,6 +104,42 @@ jobs:
     if: always() && needs.version.outputs.release == 'true' && (needs.linux.result == 'success' || needs.windows.result == 'success')
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - name: What's new (from CHANGELOG.md)
+        run: |
+          v='${{ needs.version.outputs.version }}'
+          awk -v v="$v" 'index($0, "## [" v "]") == 1 {on=1; next} on && /^## \[/ {exit} on && /^\[/ {next} on {print}' CHANGELOG.md > whatsnew.md
+          sed -i -e '/./,$!d' whatsnew.md
+          cat whatsnew.md
+      - name: Release text
+        run: |
+          { echo "### What's new"; echo; cat whatsnew.md; echo; cat <<'NOTES'
+          ### Install
+
+          **Arch / CachyOS / Manjaro** — one command:
+          ```bash
+          curl -fLo /tmp/runfjord.pkg.tar.xz https://github.com/${{ github.repository }}/releases/latest/download/Runfjord-Linux-Arch-x86_64.pkg.tar.xz && sudo pacman -U /tmp/runfjord.pkg.tar.xz
+          ```
+
+          **Any Linux** — one command, no password needed:
+          ```bash
+          curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/install.sh | bash
+          ```
+
+          ### Or download a file below and install it yourself
+
+          | System | File | How to install |
+          |---|---|---|
+          | **Windows 10/11** | `Runfjord-Windows-Setup-${{ needs.version.outputs.version }}.exe` | Double-click it. If SmartScreen warns, click *More info → Run anyway*. |
+          | **Arch / CachyOS / Manjaro** | `Runfjord-Linux-Arch-x86_64.pkg.tar.xz` | In the folder you saved it to: `sudo pacman -U Runfjord-Linux-Arch-x86_64.pkg.tar.xz` |
+          | **Any Linux** | `Runfjord-Linux-${{ needs.version.outputs.version }}-x86_64.AppImage` | `chmod +x Runfjord-Linux-*.AppImage` and run it (or right-click → Properties → *Allow executing*). |
+
+          Uninstall: Windows → *Settings → Apps → Runfjord*; Arch → `sudo pacman -R runfjord`; one-command install → `curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/install.sh | bash -s -- --uninstall`.
+
+          Full history: [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) 
+          NOTES
+          } > release-notes.md
+          cat release-notes.md
       - uses: actions/download-artifact@v4
         with:
           path: out
@@ -114,27 +151,4 @@ jobs:
           name: Runfjord ${{ needs.version.outputs.version }}
           files: out/*
           make_latest: true
-          body: |
-            ### Install
-
-            **Arch / CachyOS / Manjaro** — one command:
-            ```bash
-            curl -fLo /tmp/runfjord.pkg.tar.xz https://github.com/${{ github.repository }}/releases/latest/download/runfjord-x86_64.pkg.tar.xz && sudo pacman -U /tmp/runfjord.pkg.tar.xz
-            ```
-
-            **Any Linux** — one command, no password needed:
-            ```bash
-            curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/install.sh | bash
-            ```
-
-            ### Or download a file below and install it yourself
-
-            | System | File | How to install |
-            |---|---|---|
-            | **Windows 10/11** | `Runfjord-Setup-${{ needs.version.outputs.version }}.exe` | Double-click it. If SmartScreen warns, click *More info → Run anyway*. |
-            | **Arch / CachyOS / Manjaro** | `runfjord-x86_64.pkg.tar.xz` | In the folder you saved it to: `sudo pacman -U runfjord-x86_64.pkg.tar.xz` |
-            | **Any Linux** | `Runfjord-${{ needs.version.outputs.version }}-x86_64.AppImage` | `chmod +x Runfjord-*.AppImage` and run it (or right-click → Properties → *Allow executing*). |
-
-            Uninstall: Windows → *Settings → Apps → Runfjord*; Arch → `sudo pacman -R runfjord`; one-command install → `curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/install.sh | bash -s -- --uninstall`.
-
-            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for what's new.
+          body_path: release-notes.md
