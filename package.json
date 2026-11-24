@@ -1,7 +1,7 @@
 {
   "name": "runfjord",
   "productName": "Runfjord",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "Keep all your scripts in one library, with a note on what each one does, and run them with one click.",
   "main": "main.js",
   "author": {
@@ -80,7 +80,7 @@
       ],
       "artifactName": "runfjord-x86_64.pkg.tar.xz"
     },
-    "copyright": "Copyright © 2026 LastJaegerVA"
+    "copyright": "Copyright © 2026 Jonas Olsen-Sund (LastJaegerVA)"
   },
   "devDependencies": {
     "electron": "^45.4.1",

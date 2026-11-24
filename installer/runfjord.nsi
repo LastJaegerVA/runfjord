@@ -35,7 +35,7 @@ VIAddVersionKey /LANG=1033 "CompanyName" "${PUBLISHER}"
 VIAddVersionKey /LANG=1033 "FileDescription" "${APPNAME} Setup"
 VIAddVersionKey /LANG=1033 "FileVersion" "${VERSION}"
 VIAddVersionKey /LANG=1033 "ProductVersion" "${VERSION}"
-VIAddVersionKey /LANG=1033 "LegalCopyright" "© ${PUBLISHER}"
+VIAddVersionKey /LANG=1033 "LegalCopyright" "© 2026 Jonas Olsen-Sund (${PUBLISHER})"
 
 !include "MUI2.nsh"
 !include "FileFunc.nsh"

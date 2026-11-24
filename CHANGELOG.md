@@ -3,10 +3,15 @@
 All notable changes to Runfjord. The format follows [Keep a Changelog](https://keepachangelog.com/),
 and versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.5.2] - 2026-11-24
+
+### Changed
+- Copyright is held as "Jonas Olsen-Sund (LastJaegerVA)"; author, publisher and maintainer stay LastJaegerVA.
+
 ## [1.5.1] - 2026-11-24
 
 ### Changed
-- The author, publisher and copyright name is now LastJaegerVA (license, installer, app details, Linux packages).
+- The author, publisher and maintainer name is now LastJaegerVA (installer, app details, Linux packages).
 
 ## [1.5.0] - 2026-11-24
 
@@ -78,6 +83,7 @@ and versions follow [Semantic Versioning](https://semver.org/).
 - First release: script library with descriptions, categories, tags and favourites; one-click running with live
   output; run in terminal; built-in code editor; new-script templates; search and sorting; export/import.
 
+[1.5.2]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.5.2
 [1.5.1]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.5.1
 [1.5.0]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.5.0
 [1.4.4]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.4.4
