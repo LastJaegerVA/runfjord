@@ -3,6 +3,11 @@
 All notable changes to Runfjord. The format follows [Keep a Changelog](https://keepachangelog.com/),
 and versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.4.4] - 2026-11-24
+
+### Changed
+- Arch / CachyOS install command now downloads the package first, then runs `sudo pacman -U` on it (pacman refuses unsigned packages given as a web link).
+
 ## [1.4.3] - 2026-11-24
 
 ### Fixed
@@ -63,6 +68,7 @@ and versions follow [Semantic Versioning](https://semver.org/).
 - First release: script library with descriptions, categories, tags and favourites; one-click running with live
   output; run in terminal; built-in code editor; new-script templates; search and sorting; export/import.
 
+[1.4.4]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.4.4
 [1.4.3]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.4.3
 [1.4.2]: ../../releases/tag/v1.4.2
 [1.4.1]: ../../releases/tag/v1.4.1
