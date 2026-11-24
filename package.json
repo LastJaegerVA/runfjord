@@ -17,7 +17,7 @@
     "dist:win": "electron-builder --win dir --x64"
   },
   "build": {
-    "appId": "no.jonas.runfjord",
+    "appId": "io.github.lastjaegerva.runfjord",
     "productName": "Runfjord",
     "icon": "build/icon.png",
     "files": [
