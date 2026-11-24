@@ -393,3 +393,14 @@ body, .app, .sidebar, .list-pane, .detail, .card, .box, .search, .modal { transi
 .sel-bar .grow { flex: 1; }
 .sel-bar #selCount { font-weight: 600; color: var(--text); }
 .sel-bar .btn svg { width: 15px; height: 15px; }
+
+/* ---------- wallpapers ---------- */
+.app { background: var(--bg) var(--wall, none) center / cover no-repeat; }
+[data-wall="on"] .sidebar { background: color-mix(in srgb, var(--bg2) 72%, transparent); backdrop-filter: blur(22px) saturate(1.2); }
+[data-wall="on"] .list-pane { background: color-mix(in srgb, var(--bg) 70%, transparent); backdrop-filter: blur(22px) saturate(1.2); }
+[data-wall="on"] .detail { background: color-mix(in srgb, var(--bg2) 38%, transparent); }
+[data-wall="on"] .detail .box, [data-wall="on"] .empty-card { backdrop-filter: blur(14px); }
+[data-wall="on"] .empty-card { background: color-mix(in srgb, var(--bg2) 72%, transparent); border-radius: 22px; padding: 30px 34px; }
+[data-wall="on"] .sel-bar { background: color-mix(in srgb, var(--bg2) 85%, transparent); }
+.tp.has-wall .tp-side { opacity: .86; }
+.tp.has-wall .tp-card { opacity: .93; }

@@ -29,7 +29,7 @@
 - **Clean up fast** — the select button (or <kbd>Ctrl</kbd>+click) lets you tick several scripts and remove them in one go; <kbd>Delete</kbd> removes the selected script; *Settings → Clean up → Remove all scripts* empties the library. Only the library entries go — your script files are never deleted.
 - **Built-in code editor** and templates for new scripts (Bash, Python, JavaScript, PowerShell, Batch, Fish).
 - **Runs almost anything** — `.sh` `.bash` `.zsh` `.fish` `.py` `.js` `.ts` `.ps1` `.bat` `.cmd` `.rb` `.pl` `.lua` `.php` and any executable, or set your own command (e.g. `sudo bash {file}`).
-- **10 themes** — Midnight, Daylight, Nordlys, Fjord, Forest, Ember, Synthwave, Terminal, Paper and High contrast — plus *Auto* and any accent colour.
+- **18 themes** — Midnight, Daylight, Nordlys, Fjord, Forest, Ember, Synthwave, Terminal, Paper and High contrast, plus eight with a matching wallpaper: Fjord Night, Dawn, Deep Sea, Nebula, Dunes, Glacier, Blossom and Moss. *Auto* follows your system, any accent colour works, and any wallpaper can be used with any theme (or none).
 - **35 languages** — picked automatically from your computer's language, with full right-to-left layout for Arabic, Hebrew and Persian.
 - **Your data stays yours** — no account, no network access, no telemetry. Export/import your library as a `.json` backup.
 

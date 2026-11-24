@@ -936,6 +936,15 @@ const THEMES = [
   { id: 'terminal',  name: 'Terminal',      mode: 'dark',  bg: '#050806', bg2: '#080c09', panel: '#0c120e', panel2: '#101812', hover: '#15201a', line: '#16231b', line2: '#1f3326', text: '#c8f7d4', text2: '#86c99a', text3: '#558a66', console: '#020403', ctext: '#4dff88', accent: '#33e070', mono: true },
   { id: 'paper',     name: 'Paper',         mode: 'light', bg: '#efe9dd', bg2: '#f6f1e7', panel: '#fffcf5', panel2: '#f4eee2', hover: '#ece4d4', line: '#e2d8c5', line2: '#d4c7b0', text: '#2a2118', text2: '#5f5040', text3: '#8a7a66', console: '#2a2118', ctext: '#f3e7d3', accent: '#c25a2c' },
   { id: 'contrast',  name: 'High contrast', mode: 'dark',  bg: '#000000', bg2: '#000000', panel: '#0b0b0b', panel2: '#141414', hover: '#262626', line: '#5c5c5c', line2: '#8a8a8a', text: '#ffffff', text2: '#e6e6e6', text3: '#c2c2c2', console: '#000000', ctext: '#ffffff', accent: '#ffd400' },
+  // themes with a matching wallpaper (renderer/wallpapers.js)
+  { id: 'fjordnatt', mode: 'dark',  wall: 'fjordnatt', bg: '#0b1020', bg2: '#0f1528', panel: '#151d35', panel2: '#1a2340', hover: '#212c4d', line: '#222c48', line2: '#2d3a5e', text: '#e6ebfa', text2: '#a4afd0', text3: '#6d79a0', console: '#080c18', ctext: '#cfdaf5', accent: '#7aa2ff' },
+  { id: 'morgengry', mode: 'light', wall: 'morgengry', bg: '#f7ece8', bg2: '#fbf3f0', panel: '#fffaf8', panel2: '#f8eeea', hover: '#f2e3de', line: '#ecdcd6', line2: '#dfcac3', text: '#2b1d22', text2: '#6a4f57', text3: '#94787f', console: '#24171c', ctext: '#f6dfe3', accent: '#d9506f' },
+  { id: 'havdyp',    mode: 'dark',  wall: 'havdyp',    bg: '#061418', bg2: '#08191e', panel: '#0c2229', panel2: '#102b33', hover: '#15363f', line: '#15333b', line2: '#1d4550', text: '#e0f4f5', text2: '#94c2c6', text3: '#5d8c91', console: '#041013', ctext: '#bff3ef', accent: '#2ec4c4' },
+  { id: 'nebula',    mode: 'dark',  wall: 'nebula',    bg: '#0c0716', bg2: '#110a1e', panel: '#170f29', panel2: '#1d1434', hover: '#261a43', line: '#261b3f', line2: '#352656', text: '#f0e9ff', text2: '#b3a3d6', text3: '#7b6ba0', console: '#08050f', ctext: '#e7d5ff', accent: '#b06bff' },
+  { id: 'dunes',     mode: 'light', wall: 'dunes',     bg: '#f3e9d8', bg2: '#f8f1e4', panel: '#fffaf1', panel2: '#f5ecdc', hover: '#eee1ca', line: '#e6d7bd', line2: '#d8c4a2', text: '#2e2315', text2: '#66543b', text3: '#8d7a58', console: '#2a2014', ctext: '#f5e6cb', accent: '#c4741f' },
+  { id: 'glacier',   mode: 'light', wall: 'glacier',   bg: '#e8f2f7', bg2: '#f1f7fa', panel: '#fbfeff', panel2: '#edf5f9', hover: '#e1eef4', line: '#d3e5ee', line2: '#bdd6e3', text: '#102631', text2: '#3e5f6e', text3: '#66858f', console: '#0e2029', ctext: '#d4ecf5', accent: '#1590b8' },
+  { id: 'blossom',   mode: 'light', wall: 'blossom',   bg: '#f8eaf0', bg2: '#fcf2f6', panel: '#fffbfd', panel2: '#f9edf3', hover: '#f3e1ea', line: '#efd8e3', line2: '#e2c3d2', text: '#2c1724', text2: '#6b4a5c', text3: '#957384', console: '#26131e', ctext: '#f9dbe8', accent: '#d0437f' },
+  { id: 'moss',      mode: 'dark',  wall: 'moss',      bg: '#0c120c', bg2: '#101810', panel: '#162016', panel2: '#1b281b', hover: '#223222', line: '#223022', line2: '#2d402d', text: '#e7f0e2', text2: '#a7bb9e', text3: '#718669', console: '#080d08', ctext: '#d6ebc9', accent: '#9acd5a' },
 ];
 const themeById = (id) => THEMES.find((t) => t.id === id) || THEMES[0];
 const darkMQ = window.matchMedia('(prefers-color-scheme: dark)');
@@ -957,6 +966,11 @@ function applySettings() {
   r.style.setProperty('--accent', st.accent || t.accent);
   r.style.setProperty('--on-accent', isLight(st.accent || t.accent) ? '#111111' : '#ffffff');
   r.style.setProperty('--shadow', t.mode === 'light' ? '0 20px 60px rgba(20,25,50,.18)' : '0 20px 60px rgba(0,0,0,.55)');
+  // wallpaper: the theme's own, none, or any wallpaper picked in Settings
+  const wp = st.wallpaper || 'theme';
+  const wid = wp === 'none' ? null : wp === 'theme' ? t.wall : wp;
+  if (wid && window.Wallpapers?.ids.includes(wid)) { r.style.setProperty('--wall', window.Wallpapers.css(wid)); r.dataset.wall = 'on'; }
+  else { r.style.removeProperty('--wall'); delete r.dataset.wall; }
   r.style.setProperty('--font', t.mono ? 'var(--mono)' : '"Inter", "Segoe UI Variable", "Segoe UI", -apple-system, "Noto Sans", Ubuntu, Cantarell, sans-serif');
 }
 darkMQ.addEventListener('change', () => { if (lib.settings.themeId === 'auto') applySettings(); });
@@ -968,7 +982,7 @@ function isLight(hex) {
 function themePreview(t, label, id, sel) {
   const ac = t.accent;
   return `<button class="theme-card ${sel ? 'sel' : ''}" data-theme-id="${id}" title="${esc(label)}">
-    <div class="tp" style="background:${t.bg}">
+    <div class="tp ${t.wall ? 'has-wall' : ''}" style="background:${t.bg}${t.wall ? ` center/cover no-repeat ${window.Wallpapers.css(t.wall)}` : ''}">
       <div class="tp-side" style="background:${t.bg2};border-color:${t.line}">
         <i style="background:${ac}"></i><b style="background:${t.line2}"></b><b style="background:${t.line2}"></b><b style="background:${t.line2}"></b>
       </div>
@@ -1017,6 +1031,13 @@ function openSettings() {
           ${ACCENTS.map((c) => `<button class="swatch ${c === st.accent ? 'sel' : ''}" data-c="${c}" style="background:${c}" title="${c}"></button>`).join('')}
           <label class="swatch swatch-custom" title="${t('pick_any')}"><input type="color" id="stCustom" value="${esc(st.accent || activeTheme().accent)}" /></label>
         </div></div>
+      <div class="field"><label>${t('wallpaper')}</label>
+        <select class="input" id="stWall" style="max-width:320px">
+          <option value="theme" ${(st.wallpaper || 'theme') === 'theme' ? 'selected' : ''}>${t('wall_theme')}</option>
+          <option value="none" ${st.wallpaper === 'none' ? 'selected' : ''}>${t('wall_none')}</option>
+          ${THEMES.filter((th) => th.wall).map((th) => `<option value="${th.wall}" ${st.wallpaper === th.wall ? 'selected' : ''}>${esc(themeName(th))}</option>`).join('')}
+        </select>
+        <div class="hint">${t('wall_hint')}</div></div>
       <div class="field"><label>${t('language_setting')}</label>
         <select class="input" id="stLang" style="max-width:320px">
           <option value="auto">${esc(t('lang_auto', { lang: (window.I18N.LANGUAGES.find((l) => l.code === systemLang()) || {}).name || 'English' }))}</option>
@@ -1032,6 +1053,7 @@ function openSettings() {
     </div>
     <div class="m-foot"><span class="left">Runfjord v${esc(ui.version || '1.0.0')}</span><button class="btn btn-primary" data-close>${t('done')}</button></div>`;
   openModal(html, 'wide');
+  $('#stWall').onchange = (e) => { st.wallpaper = e.target.value; applySettings(); persist(); };
   $('#stThemes').onclick = (e) => {
     const b = e.target.closest('.theme-card'); if (!b) return;
     st.themeId = b.dataset.themeId; applySettings(); persist();

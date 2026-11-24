@@ -3,6 +3,12 @@
 All notable changes to Runfjord. The format follows [Keep a Changelog](https://keepachangelog.com/),
 and versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.7.0] - 2026-11-24
+
+### Added
+- **8 new themes with matching wallpapers**: Fjord Night, Dawn, Deep Sea, Nebula, Dunes, Glacier, Blossom and Moss. The wallpapers are original artwork drawn in code (no image files).
+- **Settings → Wallpaper**: match the theme, none, or pick any wallpaper for any theme. The sidebar and list turn softly see-through so the wallpaper shows.
+
 ## [1.6.0] - 2026-11-24
 
 ### Added
@@ -93,6 +99,7 @@ and versions follow [Semantic Versioning](https://semver.org/).
 - First release: script library with descriptions, categories, tags and favourites; one-click running with live
   output; run in terminal; built-in code editor; new-script templates; search and sorting; export/import.
 
+[1.7.0]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.7.0
 [1.6.0]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.6.0
 [1.5.2]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.5.2
 [1.5.1]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.5.1
