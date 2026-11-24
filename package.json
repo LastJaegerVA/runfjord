@@ -1,15 +1,18 @@
 {
   "name": "runfjord",
   "productName": "Runfjord",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Keep all your scripts in one library, with a note on what each one does, and run them with one click.",
   "main": "main.js",
-  "author": "Jonas Olsen-Sund",
+  "author": {
+    "name": "Jonas Olsen-Sund",
+    "email": "LastJaegerVA@users.noreply.github.com"
+  },
   "license": "MIT",
   "scripts": {
     "start": "electron .",
     "check": "node tools/check-locales.js",
-    "dist:linux": "electron-builder --linux AppImage",
+    "dist:linux": "electron-builder --linux",
     "dist:win": "electron-builder --win dir --x64"
   },
   "build": {
@@ -25,11 +28,26 @@
       "LICENSE"
     ],
     "linux": {
-      "target": "AppImage",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "pacman",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "category": "Utility",
       "syncDesktopName": true,
       "artifactName": "Runfjord-${version}-x86_64.AppImage",
-      "icon": "build/icons"
+      "icon": "build/icons",
+      "maintainer": "Jonas Olsen-Sund <LastJaegerVA@users.noreply.github.com>",
+      "synopsis": "Keep all your scripts in one place and run them with one click"
     },
     "win": {
       "target": [
@@ -48,7 +66,19 @@
       "artifactName": "Runfjord-${version}-Windows-Portable.exe"
     },
     "publish": null,
-    "executableName": "runfjord"
+    "executableName": "runfjord",
+    "pacman": {
+      "depends": [
+        "gtk3",
+        "nss",
+        "alsa-lib",
+        "libxss",
+        "libnotify",
+        "libxtst",
+        "xdg-utils"
+      ],
+      "artifactName": "runfjord-x86_64.pkg.tar.xz"
+    }
   },
   "devDependencies": {
     "electron": "^45.4.1",
@@ -64,5 +94,10 @@
     "powershell",
     "python",
     "desktop"
-  ]
+  ],
+  "homepage": "https://github.com/LastJaegerVA/runfjord",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LastJaegerVA/runfjord.git"
+  }
 }

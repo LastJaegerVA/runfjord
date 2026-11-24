@@ -38,7 +38,16 @@
 
 ## Download
 
-### Linux — one command
+### Arch / CachyOS / Manjaro — one command
+
+```bash
+sudo pacman -U https://github.com/LastJaegerVA/runfjord/releases/latest/download/runfjord-x86_64.pkg.tar.xz
+```
+
+Installs the newest version system-wide with pacman, so it shows up in your app menu and updates the same way.
+Remove it with `sudo pacman -R runfjord`.
+
+### Any Linux — one command
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/LastJaegerVA/runfjord/main/install.sh | bash
@@ -51,14 +60,15 @@ Run the same command again to update. To remove Runfjord:
 curl -fsSL https://raw.githubusercontent.com/LastJaegerVA/runfjord/main/install.sh | bash -s -- --uninstall
 ```
 
-### Windows, or download it yourself
+### Download the file and install it yourself
 
 Get the latest version from the [**Releases**](../../releases/latest) page.
 
 | System | File | How to install |
 |---|---|---|
 | **Windows 10/11** | `Runfjord-Setup-x.y.z.exe` | Run it. Installs for your user (no admin rights needed), adds Start menu and desktop shortcuts, and can be removed from *Settings → Apps*. |
-| **Linux** (x86-64) | `Runfjord-x.y.z-x86_64.AppImage` | Use the command above, or `chmod +x Runfjord-*.AppImage` and double-click it. Works on most distributions (Arch/CachyOS, Ubuntu, Fedora, …). |
+| **Arch / CachyOS / Manjaro** | `runfjord-x86_64.pkg.tar.xz` | In the folder you saved it to: `sudo pacman -U runfjord-x86_64.pkg.tar.xz`. Adds Runfjord to your app menu; remove with `sudo pacman -R runfjord`. |
+| **Any Linux** (x86-64) | `Runfjord-x.y.z-x86_64.AppImage` | Use the command above, or `chmod +x Runfjord-*.AppImage` and double-click it. Works on most distributions (Arch/CachyOS, Ubuntu, Fedora, …). |
 
 > **Windows SmartScreen** may warn the first time, because the installer isn't code-signed. Click **More info → Run anyway**.
 

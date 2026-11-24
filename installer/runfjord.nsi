@@ -1,8 +1,8 @@
-; Runfjord — Windows installer (NSIS 3)
+﻿; Runfjord — Windows installer (NSIS 3)
 ;
 ; Build (from the repository root, after `npx electron-builder --win dir`):
 ;   node tools/gen-installer-langs.js
-;   makensis /DVERSION=1.3.0 installer/runfjord.nsi
+;   makensis /INPUTCHARSET UTF8 /DVERSION=1.4.2 installer/runfjord.nsi
 ;
 ; Installs per user (no admin rights), adds Start menu + optional desktop shortcuts,
 ; registers in Windows "Apps & features", and ships an uninstaller.
@@ -63,7 +63,7 @@ VIAddVersionKey /LANG=1033 "LegalCopyright" "© 2026 ${PUBLISHER} — MIT Licens
 !insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
 
-!include "langs.nsh"
+!include /CHARSET=UTF8 "langs.nsh"
 
 Function .onInit
   ; close a running copy so files can be replaced when updating

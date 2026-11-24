@@ -1,9 +1,14 @@
 name: Release
 
-# Push a tag like v1.4.0 to build the Windows installer and Linux AppImage
-# and attach them to a new GitHub release.
+# A new release is published automatically when the version in package.json goes up
+# (or when a tag like v1.4.2 is pushed). It builds:
+#   - Runfjord-Setup-<version>.exe        Windows installer
+#   - Runfjord-<version>-x86_64.AppImage  any Linux (used by install.sh)
+#   - runfjord-x86_64.pkg.tar.xz          Arch / CachyOS:  sudo pacman -U <latest download URL>
 on:
   push:
+    branches: [main]
+    paths: [package.json]
     tags: ['v*']
   workflow_dispatch:
 
@@ -11,7 +16,31 @@ permissions:
   contents: write
 
 jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      release: ${{ steps.v.outputs.release }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          elif gh release view "v$version" >/dev/null 2>&1; then
+            echo "Release v$version already exists — nothing to do."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   linux:
+    needs: version
+    if: needs.version.outputs.release == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,15 +50,21 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+      - name: Tools for the Arch package
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libarchive-tools
       - run: npm run dist:linux
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/upload-artifact@v4
         with:
           name: linux
-          path: dist/*.AppImage
+          path: |
+            dist/*.AppImage
+            dist/*.pkg.tar.xz
 
   windows:
+    needs: version
+    if: needs.version.outputs.release == 'true'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -55,8 +90,7 @@ jobs:
         shell: pwsh
         run: |
           node tools/gen-installer-langs.js
-          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
-          & $env:MAKENSIS /V2 "/DVERSION=$version" installer/runfjord.nsi
+          & $env:MAKENSIS /V3 /INPUTCHARSET UTF8 "/DVERSION=${{ needs.version.outputs.version }}" installer/runfjord.nsi
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@v4
         with:
@@ -64,9 +98,9 @@ jobs:
           path: dist/Runfjord-Setup-*.exe
 
   release:
-    # attach whatever was built — the Linux file still ships if the Windows build fails
-    needs: [linux, windows]
-    if: always() && startsWith(github.ref, 'refs/tags/') && (needs.linux.result == 'success' || needs.windows.result == 'success')
+    # publish whatever was built — the Linux files still ship if the Windows build fails
+    needs: [version, linux, windows]
+    if: always() && needs.version.outputs.release == 'true' && (needs.linux.result == 'success' || needs.windows.result == 'success')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -75,5 +109,32 @@ jobs:
           merge-multiple: true
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ needs.version.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          name: Runfjord ${{ needs.version.outputs.version }}
           files: out/*
-          generate_release_notes: true
+          make_latest: true
+          body: |
+            ### Install
+
+            **Arch / CachyOS / Manjaro** — one command:
+            ```bash
+            sudo pacman -U https://github.com/${{ github.repository }}/releases/latest/download/runfjord-x86_64.pkg.tar.xz
+            ```
+
+            **Any Linux** — one command, no password needed:
+            ```bash
+            curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/install.sh | bash
+            ```
+
+            ### Or download a file below and install it yourself
+
+            | System | File | How to install |
+            |---|---|---|
+            | **Windows 10/11** | `Runfjord-Setup-${{ needs.version.outputs.version }}.exe` | Double-click it. If SmartScreen warns, click *More info → Run anyway*. |
+            | **Arch / CachyOS / Manjaro** | `runfjord-x86_64.pkg.tar.xz` | In the folder you saved it to: `sudo pacman -U runfjord-x86_64.pkg.tar.xz` |
+            | **Any Linux** | `Runfjord-${{ needs.version.outputs.version }}-x86_64.AppImage` | `chmod +x Runfjord-*.AppImage` and run it (or right-click → Properties → *Allow executing*). |
+
+            Uninstall: Windows → *Settings → Apps → Runfjord*; Arch → `sudo pacman -R runfjord`; one-command install → `curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/install.sh | bash -s -- --uninstall`.
+
+            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for what's new.

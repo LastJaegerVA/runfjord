@@ -37,5 +37,5 @@ for (const c of codes) {
   out += `LangString WelcomeText ${L} "${esc(I.t('welcome_text'))}$\\r$\\n$\\r$\\n$(^ClickNext)"\n`;
   out += `LangString SecDeskName ${L} "${esc(DESKTOP[c])}"\n`;
 }
-fs.writeFileSync(path.join(__dirname, '..', 'installer', 'langs.nsh'), out);
+fs.writeFileSync(path.join(__dirname, '..', 'installer', 'langs.nsh'), '\ufeff' + out); // BOM: NSIS on Windows needs it to read UTF-8
 console.log(`installer/langs.nsh: ${codes.length} languages`);
