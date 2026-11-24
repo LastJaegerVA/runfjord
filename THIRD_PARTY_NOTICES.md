@@ -1,7 +1,7 @@
 # Third-party notices
 
 Runfjord's own source code, artwork (the app icon and in-app logo) and translations are
-© 2026 Jonas Olsen-Sund and released under the [MIT License](LICENSE).
+© 2026 Jonas Olsen-Sund (LastJaegerVA) and released under the [MIT License](LICENSE).
 
 The app is built on the open-source projects below. Their licences allow redistribution;
 the notices they require are listed here and shipped with every build.

@@ -5,7 +5,7 @@
   "description": "Keep all your scripts in one library, with a note on what each one does, and run them with one click.",
   "main": "main.js",
   "author": {
-    "name": "Jonas Olsen-Sund",
+    "name": "LastJaegerVA",
     "email": "LastJaegerVA@users.noreply.github.com"
   },
   "license": "MIT",
@@ -46,7 +46,7 @@
       "syncDesktopName": true,
       "artifactName": "Runfjord-${version}-x86_64.AppImage",
       "icon": "build/icons",
-      "maintainer": "Jonas Olsen-Sund <LastJaegerVA@users.noreply.github.com>",
+      "maintainer": "LastJaegerVA <LastJaegerVA@users.noreply.github.com>",
       "synopsis": "Keep all your scripts in one place and run them with one click"
     },
     "win": {
@@ -78,7 +78,8 @@
         "xdg-utils"
       ],
       "artifactName": "runfjord-x86_64.pkg.tar.xz"
-    }
+    },
+    "copyright": "Copyright © 2026 Jonas Olsen-Sund (LastJaegerVA)"
   },
   "devDependencies": {
     "electron": "^45.4.1",

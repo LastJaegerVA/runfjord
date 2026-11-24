@@ -16,7 +16,7 @@ ManifestDPIAware true
   !define VERSION "0.0.0"
 !endif
 !define APPNAME "Runfjord"
-!define PUBLISHER "Jonas Olsen-Sund"
+!define PUBLISHER "LastJaegerVA"
 !define EXENAME "runfjord.exe"
 !define UNINSTKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}"
 ; paths are relative to this file's folder (makensis switches to it)
