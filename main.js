@@ -402,6 +402,40 @@ ipcMain.handle('run:stop', (_e, id) => {
   return true;
 });
 
+// ---------- administrator rights ----------
+// Windows only lets an elevated (administrator) program show its output in a non-elevated window
+// through a separate console. So to run admin scripts inside Runfjord, Runfjord itself restarts
+// elevated (the normal Windows "Run as administrator" prompt), then starts the waiting script.
+let elevatedCache = null;
+function isElevated() {
+  if (elevatedCache !== null) return elevatedCache;
+  try {
+    if (isWin) { execSync('fltmc', { stdio: 'ignore', windowsHide: true }); elevatedCache = true; }
+    else elevatedCache = typeof process.getuid === 'function' && process.getuid() === 0;
+  } catch { elevatedCache = false; }
+  return elevatedCache;
+}
+const RUN_FLAG = '--runfjord-run=';
+const pendingRun = (process.argv.find((a) => a.startsWith(RUN_FLAG)) || '').slice(RUN_FLAG.length) || null;
+ipcMain.handle('admin:status', () => ({ elevated: isElevated(), platform: process.platform, pendingRun }));
+ipcMain.handle('admin:relaunch', async (_e, scriptId) => {
+  if (!isWin) return { ok: false, error: 'Only needed on Windows.' };
+  if (isElevated()) return { ok: false, error: 'Already running as administrator.' };
+  const args = [...(app.isPackaged ? [] : [app.getAppPath()]), ...(scriptId ? [RUN_FLAG + String(scriptId).replace(/[^\w-]/g, '')] : [])];
+  const psq = (x) => `'${String(x).replace(/'/g, "''")}'`;
+  const ps = `try { Start-Process -FilePath ${psq(process.execPath)} ${args.length ? `-ArgumentList ${args.map(psq).join(',')}` : ''} -Verb RunAs -ErrorAction Stop; exit 0 } catch { exit 1 }`;
+  const code = await new Promise((resolve) => {
+    const p = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', ps], { windowsHide: true, stdio: 'ignore' });
+    p.on('error', () => resolve(-1)); p.on('exit', (c) => resolve(c));
+  });
+  if (code !== 0) return { ok: false, declined: true };
+  // the elevated copy is starting: stop our scripts and close this window
+  for (const id of [...terms.keys()]) killTerm(id, true);
+  for (const c of running.values()) { try { spawn('taskkill', ['/pid', String(c.pid), '/T', '/F'], { windowsHide: true }); } catch {} }
+  setTimeout(() => app.quit(), 300);
+  return { ok: true };
+});
+
 // ---------- built-in terminal (a real pseudo-terminal, shown with xterm.js) ----------
 // node-pty is loaded only when first needed, and any failure just means "use a separate window".
 let pty = null, ptyError = null;
@@ -442,8 +476,9 @@ ipcMain.handle('term:start', (e, script, cols, rows) => {
   if (!fs.existsSync(script.path)) return { ok: false, error: t('file_not_found_p', { p: script.path }) };
   const P = loadPty();
   if (!P) return { ok: false, fallback: true, error: ptyError };
-  const { cmd, args } = buildCommand(script);
+  let { cmd, args } = buildCommand(script);
   const cwd = script.cwd && fs.existsSync(script.cwd) ? script.cwd : path.dirname(script.path);
+  if (script.admin && !isWin && !isElevated()) { args = ['--', cmd, ...args]; cmd = 'sudo'; }
   // on Windows, app-store shortcuts (like python.exe) can't be checked as files; let Windows find them
   const exe = resolveExe(cmd) || (isWin ? cmd : null);
   if (!exe) return { ok: false, error: `${t('could_not_start', { cmd, err: 'not found' })}\n${t('enoent_hint', { cmd })}` };

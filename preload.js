@@ -21,6 +21,8 @@ contextBridge.exposeInMainWorld('api', {
   stdin: (id, text) => ipcRenderer.invoke('run:stdin', id, text),
   stop: (id) => ipcRenderer.invoke('run:stop', id),
   runInTerminal: (s) => ipcRenderer.invoke('run:terminal', s),
+  adminStatus: () => ipcRenderer.invoke('admin:status'),
+  adminRelaunch: (id) => ipcRenderer.invoke('admin:relaunch', id),
   termAvailable: () => ipcRenderer.invoke('term:available'),
   termStart: (s, cols, rows) => ipcRenderer.invoke('term:start', s, cols, rows),
   termInput: (id, data) => ipcRenderer.invoke('term:input', id, data),

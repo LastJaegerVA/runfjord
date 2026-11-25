@@ -431,3 +431,12 @@ body, .app, .sidebar, .list-pane, .detail, .card, .box, .search, .modal { transi
 .term-host .xterm-viewport::-webkit-scrollbar { width: 10px; }
 .term-host .xterm-viewport::-webkit-scrollbar-thumb { background: #ffffff22; border-radius: 10px; }
 .out-bar .info svg { width: 15px; height: 15px; vertical-align: -3px; margin-inline-end: 4px; }
+
+/* ---------- administrator ---------- */
+.admin-badge { display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; padding: 2px 8px 2px 6px; border-radius: 20px; font-size: 11px; font-weight: 600; color: #f6c86b; background: #f6c86b1f; border: 1px solid #f6c86b55; }
+.admin-badge[hidden] { display: none; }
+.admin-badge svg { width: 12px; height: 12px; }
+.m-head h2 svg { width: 20px; height: 20px; vertical-align: -3px; color: var(--accent); }
+label.check svg { width: 15px; height: 15px; vertical-align: -3px; }
+.modal.admin { width: 700px; max-width: calc(100vw - 40px); }
+.modal.admin .m-foot { flex-wrap: wrap; row-gap: 8px; }

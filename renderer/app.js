@@ -60,6 +60,7 @@ const catColor = (name) => (lib.categories.find((c) => c.name === name) || {}).c
 const MARK = (id) => `<svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:color-mix(in srgb, var(--accent) 55%, #ffffff)"/><stop offset="1" style="stop-color:var(--accent)"/></linearGradient><clipPath id="${id}c"><rect width="64" height="64" rx="15"/></clipPath></defs><g clip-path="url(#${id}c)"><rect width="64" height="64" fill="#0c1222"/><g fill="none" stroke-linecap="round" stroke-width="1.6" style="stroke:var(--accent)" stroke-opacity=".45"><path d="M0 12 C8 12 13 13.5 18 15 L60 26"/><path d="M0 52 C8 52 13 50.5 18 49 L60 38"/></g><path d="M0 18 C6 18 11 19.5 16 21 L50 29.5 Q54 32 50 34.5 L16 43 C11 44.5 6 46 0 46 Z" fill="url(#${id})"/><rect x="7" y="27" width="18" height="3.4" rx="1.7" fill="#fff" fill-opacity=".92"/><rect x="7" y="33.6" width="12" height="3.4" rx="1.7" fill="#fff" fill-opacity=".6"/></g></svg>`;
 const icon = (d) => `<svg viewBox="0 0 24 24">${d}</svg>`;
 const I = {
+  shield: '<path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
   search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
   play: '<path d="M7 4.5v15l12.5-7.5z" fill="currentColor" stroke="none"/>',
   stop: '<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" stroke="none"/>',
@@ -517,6 +518,9 @@ async function runScript(id) {
   const s = getScript(id); if (!s) return;
   if (ui.running.has(id)) return;
   if (s.terminal) return runInTerminal(id);
+  // admin scripts: on Linux they need a terminal for the sudo password; on Windows, see adminGate
+  if (s.admin && ui.platform !== 'win32' && !ui.elevated) return runInTerminal(id);
+  if (!(await adminGate(s))) return;
   ui.outMode[id] = 'plain';
   if (ui.code[id]?.dirty && !(await saveCode(id))) return;
   ui.outputs[id] = [];
@@ -533,6 +537,7 @@ async function runInTerminal(id) {
   const s = getScript(id); if (!s) return;
   if (ui.running.has(id)) return select(id, 'output');
   if (ui.code[id]?.dirty && !(await saveCode(id))) return;
+  if (!(await adminGate(s))) return;
   if (lib.settings.terminalMode !== 'window') {
     if (await termSupported()) return runInAppTerminal(s);
     if (!ui.termFallbackShown) { ui.termFallbackShown = true; toast(t('term_fallback'), 'err'); }
@@ -570,6 +575,49 @@ api.onRunEvent(({ id, type, data }) => {
     }
   }
 });
+
+// ================================================================
+// administrator rights
+// ================================================================
+// Scripts that elevate themselves (UAC) always leave for a new console window on Windows.
+// Recognise the usual ways a script does that, so Runfjord can offer to run it inside instead.
+const SELF_ELEVATE = [/-Verb\s+['"]?RunAs/i, /#Requires\s+-RunAsAdministrator/i, /\bnet\s+session\b/i, /\bfltmc\b/i, /BatchGotAdmin/i, /IsInRole\([^)]*Administrator/i, /getadmin\.vbs/i, /cacls(\.exe)?\s+"?%?SYSTEMROOT%?\\system32/i, /\bShellExecute\b[^\n]*runas/i];
+async function scriptNeedsAdmin(s) {
+  if (s.admin) return true;
+  if (ui.platform !== 'win32') return false;
+  try { const r = await api.readFile(s.path); return !!(r.ok && SELF_ELEVATE.some((re) => re.test(String(r.content).slice(0, 65536)))); } catch { return false; }
+}
+// returns true when the script may run here now; false when it was handled (restart / window / cancelled)
+async function adminGate(s) {
+  if (ui.platform !== 'win32' || ui.elevated) return true;
+  if (!(await scriptNeedsAdmin(s))) return true;
+  const choice = await new Promise((res) => {
+    openModal(`<div class="m-head"><h2>${icon(I.shield)} ${esc(t('admin_q'))}</h2></div>
+      <div class="m-body"><p style="margin:0 0 10px;color:var(--text2);line-height:1.6"><b>${esc(s.name)}</b></p><p style="margin:0;color:var(--text2);line-height:1.6">${esc(t('admin_text'))}</p></div>
+      <div class="m-foot"><button class="btn" data-close>${t('cancel')}</button><span class="grow"></span>
+        <button class="btn" id="adWin">${t('admin_separate')}</button>
+        <button class="btn btn-primary" id="adRestart">${icon(I.shield)} ${t('admin_restart')}</button></div>`, 'admin');
+    modalResolve = res;
+    const pick = (v) => () => { modalResolve = null; $('#modalBackdrop').classList.remove('show'); res(v); };
+    $('#adWin').onclick = pick('window'); $('#adRestart').onclick = pick('restart'); $('#adRestart').focus();
+  });
+  if (choice === 'window') { await runInWindow(s); return false; }
+  if (choice === 'restart') await restartAsAdmin(s.id);
+  return false;
+}
+async function restartAsAdmin(scriptId) {
+  if (ui.running.size && !(await confirmDialog(t('admin_restart'), t('admin_running_text'), t('admin_restart'), false))) return;
+  persist();
+  const r = await api.adminRelaunch(scriptId || null);
+  if (!r.ok) toast(r.declined ? t('admin_declined') : r.error, 'err');
+}
+function renderAdminBadge() {
+  const b = $('#adminBadge'); if (!b) return;
+  b.hidden = !ui.elevated;
+  b.innerHTML = `${icon(I.shield)} ${esc(t('admin_badge'))}`;
+  b.title = t('admin_now');
+  document.title = ui.elevated ? `Runfjord (${t('admin_badge')})` : 'Runfjord';
+}
 
 // ================================================================
 // built-in terminal (xterm.js in the window, a real pseudo-terminal in the main process)
@@ -940,7 +988,7 @@ function openEditor(s) {
         <summary>${t('icon')}</summary>
         <div class="field"><div class="emoji-row" id="edEmoji">${EMOJIS.map((e) => `<button class="emoji-opt ${e === emoji ? 'sel' : ''}" data-e="${e}" title="${e ? '' : t('language_badge')}">${e || `<span style="font:700 10px var(--mono);color:${L.color}">${esc(L.label)}</span>`}</button>`).join('')}</div></div>
       </details>
-      <details class="adv" ${s.args || s.cwd || s.command || s.terminal ? 'open' : ''}>
+      <details class="adv" ${s.args || s.cwd || s.command || s.terminal || s.admin ? 'open' : ''}>
         <summary>${t('how_to_run')}</summary>
         <div class="field"><label>${t('script_file')}</label>
           <div class="input-group"><input class="input mono" id="edPath" value="${esc(s.path)}" /><button class="btn" id="edBrowse">${t('browse')}</button></div></div>
@@ -953,6 +1001,8 @@ function openEditor(s) {
           <input class="input mono" id="edCmd" value="${esc(s.command || '')}" placeholder="${esc(t('auto_cmd', { cmd: autoHint(s.path) }))}" />
           <div class="hint">${t('custom_cmd_hint')}</div></div>
         <div class="field"><label class="check"><input type="checkbox" id="edTerm" ${s.terminal ? 'checked' : ''}/> ${t('always_terminal')}</label></div>
+        <div class="field"><label class="check"><input type="checkbox" id="edAdmin" ${s.admin ? 'checked' : ''}/> ${icon(I.shield)} ${t('admin_label')}</label>
+          <div class="hint">${t(ui.platform === 'win32' ? 'admin_hint_win' : 'admin_hint_linux')}</div></div>
       </details>
     </div>
     <div class="m-foot">
@@ -996,7 +1046,7 @@ function openEditor(s) {
     const data = {
       name, path, description: $('#edDesc').value.trim(), purpose: $('#edPurpose').value.trim(),
       category: await readCatSelect('edCat'), tags, icon: emoji,
-      args: $('#edArgs').value.trim(), cwd: $('#edCwd').value.trim(), command: $('#edCmd').value.trim(), terminal: $('#edTerm').checked,
+      args: $('#edArgs').value.trim(), cwd: $('#edCwd').value.trim(), command: $('#edCmd').value.trim(), terminal: $('#edTerm').checked, admin: $('#edAdmin').checked,
     };
     let id = s.id;
     if (isNew) { const obj = newScriptObj(data); lib.scripts.push(obj); id = obj.id; }
@@ -1139,6 +1189,7 @@ function applyLanguage() {
   $$('#sortSel option').forEach((o) => { o.textContent = t('sort_' + o.value); });
   $('#searchKbd').textContent = `${KEY()} F`;
   api.setLanguage(code);
+  renderAdminBadge();
 }
 
 function openSettings() {
@@ -1166,6 +1217,9 @@ function openSettings() {
           ${THEMES.filter((th) => th.wall).map((th) => `<option value="${th.wall}" ${st.wallpaper === th.wall ? 'selected' : ''}>${esc(themeName(th))}</option>`).join('')}
         </select>
         <div class="hint">${t('wall_hint')}</div></div>
+      ${ui.platform === 'win32' ? `<div class="field"><label>${t('admin_setting')}</label>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="hint" style="margin:0">${icon(I.shield)} ${esc(ui.elevated ? t('admin_now') : t('admin_not'))}</span>
+        ${ui.elevated ? '' : `<button class="btn" id="stAdmin">${t('admin_restart')}</button>`}</div></div>` : ''}
       <div class="field"><label>${t('term_where')}</label>
         <select class="input" id="stTermMode" style="max-width:320px">
           <option value="inside" ${st.terminalMode !== 'window' ? 'selected' : ''}>${t('term_inside')}</option>
@@ -1193,6 +1247,7 @@ function openSettings() {
   openModal(html, 'wide');
   $('#stUpdAuto').onchange = (e) => { st.updAuto = e.target.checked; persist(); };
   $('#stUpdNow').onclick = async () => { const r = await checkUpdate(true); if (r?.newer) { closeModal(); openUpdateDialog(); } };
+  $('#stAdmin') && ($('#stAdmin').onclick = () => { closeModal(); restartAsAdmin(null); });
   $('#stTermMode').onchange = (e) => { st.terminalMode = e.target.value; persist(); };
   $('#stWall').onchange = (e) => { st.wallpaper = e.target.value; applySettings(); persist(); };
   $('#stThemes').onclick = (e) => {
@@ -1542,6 +1597,10 @@ async function openUpdateDialog() {
   applySettings();
   applyLanguage();
   await checkMissing();
+  try { const ad = await api.adminStatus(); ui.elevated = !!ad.elevated; ui.pendingRun = ad.pendingRun; } catch {}
   renderAll();
+  renderAdminBadge();
   autoCheckUpdate();
+  // restarted as administrator to run a script: start it now in the built-in terminal
+  if (ui.pendingRun && getScript(ui.pendingRun)) { const id = ui.pendingRun; ui.pendingRun = null; setTimeout(() => runInTerminal(id), 300); }
 })();

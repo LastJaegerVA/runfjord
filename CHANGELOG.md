@@ -3,6 +3,14 @@
 All notable changes to Runfjord. The format follows [Keep a Changelog](https://keepachangelog.com/),
 and versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.10.0] - 2026-11-25
+
+### Added
+- **Needs administrator** option for scripts (*Edit details → Advanced*). Scripts that ask Windows for admin rights themselves (`net session`, `-Verb RunAs`, `#Requires -RunAsAdministrator` and similar) are recognised automatically.
+- On Windows, running such a script offers **Restart Runfjord as administrator**: after the normal Windows prompt, Runfjord reopens with admin rights and runs the script in the built-in terminal. (Windows always gives a script that elevates itself its own window unless the program starting it is already elevated.) *Run in a separate window* is still there as a choice.
+- *Settings → Administrator rights* shows whether Runfjord runs as administrator and can restart it that way. An **Administrator** badge and window title show when it does.
+- On Linux, *Needs administrator* runs the script with `sudo` in the built-in terminal, where you type your password.
+
 ## [1.9.0] - 2026-11-25
 
 ### Added
@@ -120,6 +128,7 @@ and versions follow [Semantic Versioning](https://semver.org/).
 - First release: script library with descriptions, categories, tags and favourites; one-click running with live
   output; run in terminal; built-in code editor; new-script templates; search and sorting; export/import.
 
+[1.10.0]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.10.0
 [1.9.0]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.9.0
 [1.8.0]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.8.0
 [1.7.0]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.7.0
