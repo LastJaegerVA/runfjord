@@ -135,4 +135,11 @@ I18N.register('pt', 'Português', {
   upd_page: "Abrir página da versão",
   upd_none: "Você tem a versão mais nova ({v}).",
   upd_check_failed: "Não foi possível procurar atualizações. Você está online?",
+  term_where: "“Executar no terminal” abre",
+  term_inside: "Dentro do Runfjord",
+  term_window: "Numa janela de terminal separada",
+  term_hint: "Dentro do Runfjord você pode digitar senhas (sudo), responder perguntas e usar Ctrl+C, como num terminal normal. Copie e cole com Ctrl+Shift+C / Ctrl+Shift+V.",
+  term_fallback: "O terminal embutido não está disponível neste computador, então uma janela de terminal separada foi aberta.",
+  run_again: "Executar de novo",
+  term_label: "Terminal",
 });

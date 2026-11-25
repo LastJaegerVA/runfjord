@@ -135,4 +135,11 @@ I18N.register('ro', 'Română', {
   upd_page: "Deschide pagina versiunii",
   upd_none: "Ai cea mai nouă versiune ({v}).",
   upd_check_failed: "Nu s-au putut căuta actualizări. Ești online?",
+  term_where: "„Rulează în terminal” deschide",
+  term_inside: "În Runfjord",
+  term_window: "Într-o fereastră de terminal separată",
+  term_hint: "În Runfjord poți scrie parole (sudo), răspunde la întrebări și apăsa Ctrl+C, ca într-un terminal obișnuit. Copiere și lipire cu Ctrl+Shift+C / Ctrl+Shift+V.",
+  term_fallback: "Terminalul integrat nu este disponibil pe acest computer, așa că s-a deschis o fereastră de terminal separată.",
+  run_again: "Rulează din nou",
+  term_label: "Terminal",
 });

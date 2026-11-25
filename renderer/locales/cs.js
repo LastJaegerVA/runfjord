@@ -135,4 +135,11 @@ I18N.register('cs', 'Čeština', {
   upd_page: "Otevřít stránku vydání",
   upd_none: "Máš nejnovější verzi ({v}).",
   upd_check_failed: "Nepodařilo se zkontrolovat aktualizace. Jsi online?",
+  term_where: "„Spustit v terminálu“ otevře",
+  term_inside: "Uvnitř Runfjordu",
+  term_window: "V samostatném okně terminálu",
+  term_hint: "Uvnitř Runfjordu můžeš psát hesla (sudo), odpovídat na otázky a mačkat Ctrl+C jako v běžném terminálu. Kopírování a vkládání: Ctrl+Shift+C / Ctrl+Shift+V.",
+  term_fallback: "Vestavěný terminál není na tomto počítači dostupný, proto se otevřelo samostatné okno terminálu.",
+  run_again: "Spustit znovu",
+  term_label: "Terminál",
 });

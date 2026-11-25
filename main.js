@@ -116,6 +116,7 @@ function createWindow() {
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => {
   for (const p of running.values()) { try { isWin ? p.kill() : process.kill(-p.pid, 'SIGTERM'); } catch {} }
+  for (const id of [...terms.keys()]) killTerm(id, true);
   app.quit();
 });
 
@@ -357,7 +358,7 @@ ipcMain.handle('run:preview', (_e, script) => {
 });
 
 ipcMain.handle('run:start', (_e, script) => {
-  if (running.has(script.id)) return { ok: false, error: t('already_running') };
+  if (running.has(script.id) || terms.has(script.id)) return { ok: false, error: t('already_running') };
   if (!fs.existsSync(script.path)) return { ok: false, error: t('file_not_found_p', { p: script.path }) };
   const { cmd, args } = buildCommand(script);
   const cwd = script.cwd && fs.existsSync(script.cwd) ? script.cwd : path.dirname(script.path);
@@ -398,6 +399,89 @@ ipcMain.handle('run:stop', (_e, id) => {
       if (running.has(id)) { try { isWin ? c.kill() : process.kill(-c.pid, 'SIGKILL'); } catch {} }
     }, 2500);
   } catch {}
+  return true;
+});
+
+// ---------- built-in terminal (a real pseudo-terminal, shown with xterm.js) ----------
+// node-pty is loaded only when first needed, and any failure just means "use a separate window".
+let pty = null, ptyError = null;
+function loadPty() {
+  if (pty || ptyError) return pty;
+  try { pty = require('node-pty'); } catch (e) { ptyError = String(e && e.message || e); console.error('node-pty unavailable:', ptyError); }
+  return pty;
+}
+const terms = new Map(); // script id -> { p, buf, timer }
+
+function resolveExe(cmd) {
+  // the pseudo-terminal needs a real program path: look the command up on PATH ourselves
+  if (path.isAbsolute(cmd) || cmd.includes('/') || cmd.includes('\\')) return fs.existsSync(cmd) ? cmd : null;
+  const exts = isWin ? (process.env.PATHEXT || '.EXE;.CMD;.BAT;.COM').split(';').map((e) => e.toLowerCase()) : [''];
+  for (const dir of (process.env.PATH || '').split(path.delimiter)) {
+    if (!dir) continue;
+    for (const ext of isWin && !path.extname(cmd) ? exts : ['']) {
+      const full = path.join(dir, cmd + ext);
+      try { if (fs.statSync(full).isFile()) return full; } catch {}
+    }
+  }
+  return null;
+}
+
+function killTerm(id, hard) {
+  const s = terms.get(id); if (!s) return;
+  const pid = s.p.pid;
+  try {
+    if (isWin) { spawn('taskkill', ['/pid', String(pid), '/T', '/F'], { windowsHide: true }); }
+    else { try { process.kill(-pid, hard ? 'SIGKILL' : 'SIGHUP'); } catch { s.p.kill(hard ? 'SIGKILL' : 'SIGHUP'); } }
+  } catch {}
+}
+
+ipcMain.handle('term:available', () => ({ ok: !!loadPty(), error: ptyError }));
+
+ipcMain.handle('term:start', (e, script, cols, rows) => {
+  if (running.has(script.id) || terms.has(script.id)) return { ok: false, error: t('already_running') };
+  if (!fs.existsSync(script.path)) return { ok: false, error: t('file_not_found_p', { p: script.path }) };
+  const P = loadPty();
+  if (!P) return { ok: false, fallback: true, error: ptyError };
+  const { cmd, args } = buildCommand(script);
+  const cwd = script.cwd && fs.existsSync(script.cwd) ? script.cwd : path.dirname(script.path);
+  // on Windows, app-store shortcuts (like python.exe) can't be checked as files; let Windows find them
+  const exe = resolveExe(cmd) || (isWin ? cmd : null);
+  if (!exe) return { ok: false, error: `${t('could_not_start', { cmd, err: 'not found' })}\n${t('enoent_hint', { cmd })}` };
+  const env = { ...process.env, TERM: 'xterm-256color', COLORTERM: 'truecolor', RUNFJORD: '1' };
+  delete env.FORCE_COLOR; delete env.NO_COLOR; delete env.ELECTRON_RUN_AS_NODE;
+  let p;
+  try {
+    p = P.spawn(exe, args, {
+      name: 'xterm-256color', cwd, env,
+      cols: Math.max(20, Math.min(500, cols | 0 || 100)), rows: Math.max(5, Math.min(300, rows | 0 || 30)),
+      ...(isWin ? { useConpty: true } : {}),
+    });
+  } catch (err) { return { ok: false, fallback: /pty|conpty|winpty/i.test(String(err.message)), error: String(err.message || err) }; }
+  const sess = { p, buf: '', timer: null };
+  terms.set(script.id, sess);
+  const started = Date.now();
+  const sender = e.sender;
+  const flush = () => { sess.timer = null; if (sess.buf && !sender.isDestroyed()) sender.send('term:data', script.id, sess.buf); sess.buf = ''; };
+  // batch output for a few milliseconds so very chatty scripts don't flood the window
+  p.onData((d) => { sess.buf += d; if (sess.buf.length > 256 * 1024) flush(); else if (!sess.timer) sess.timer = setTimeout(flush, 8); });
+  const sigName = (n) => (n ? Object.keys(os.constants.signals).find((k) => os.constants.signals[k] === n) || String(n) : null);
+  p.onExit(({ exitCode, signal }) => {
+    signal = sigName(signal);
+    if (sess.timer) clearTimeout(sess.timer); flush();
+    terms.delete(script.id);
+    if (!sender.isDestroyed()) sender.send('term:exit', script.id, { code: exitCode, signal: signal || null, ms: Date.now() - started });
+  });
+  return { ok: true, command: [cmd, ...args].map(quote).join(' '), cwd, pid: p.pid };
+});
+ipcMain.handle('term:input', (_e, id, data) => { const s = terms.get(id); if (!s) return false; try { s.p.write(String(data)); return true; } catch { return false; } });
+ipcMain.handle('term:resize', (_e, id, cols, rows) => {
+  const s = terms.get(id); if (!s) return false;
+  try { s.p.resize(Math.max(20, Math.min(500, cols | 0)), Math.max(5, Math.min(300, rows | 0))); return true; } catch { return false; }
+});
+ipcMain.handle('term:stop', (_e, id) => {
+  if (!terms.has(id)) return false;
+  killTerm(id, false);
+  setTimeout(() => { if (terms.has(id)) killTerm(id, true); }, 2500);
   return true;
 });
 

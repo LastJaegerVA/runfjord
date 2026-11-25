@@ -135,4 +135,11 @@ I18N.register('sw', 'Kiswahili', {
   upd_page: "Fungua ukurasa wa toleo",
   upd_none: "Una toleo jipya zaidi ({v}).",
   upd_check_failed: "Imeshindwa kutafuta masasisho. Uko mtandaoni?",
+  term_where: "“Endesha kwenye terminali” hufungua",
+  term_inside: "Ndani ya Runfjord",
+  term_window: "Katika dirisha tofauti la terminali",
+  term_hint: "Ndani ya Runfjord unaweza kuandika manenosiri (sudo), kujibu maswali na kubonyeza Ctrl+C, kama kwenye terminali ya kawaida. Nakili na bandika kwa Ctrl+Shift+C / Ctrl+Shift+V.",
+  term_fallback: "Terminali iliyojengwa ndani haipatikani kwenye kompyuta hii, kwa hiyo dirisha tofauti la terminali limefunguliwa.",
+  run_again: "Endesha tena",
+  term_label: "Terminali",
 });

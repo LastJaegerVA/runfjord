@@ -42,6 +42,7 @@ let lib = { scripts: [], categories: [], settings: {} };
 const ui = {
   view: 'all', selectedId: null, selecting: false, picked: new Set(), search: '', sort: 'name', tab: 'overview',
   outputs: {}, running: new Set(), exitInfo: {}, missing: new Set(), code: {},
+  terms: {}, outMode: {},
   platform: 'linux',
 };
 
@@ -448,6 +449,7 @@ async function saveCode(id) {
 }
 
 function renderOutput(s, body) {
+  if (ui.outMode[s.id] === 'term' && ui.terms[s.id]) return renderTermOutput(s, body);
   const isRun = ui.running.has(s.id);
   const ex = ui.exitInfo[s.id];
   let status = t('not_run_yet');
@@ -515,6 +517,7 @@ async function runScript(id) {
   const s = getScript(id); if (!s) return;
   if (ui.running.has(id)) return;
   if (s.terminal) return runInTerminal(id);
+  ui.outMode[id] = 'plain';
   if (ui.code[id]?.dirty && !(await saveCode(id))) return;
   ui.outputs[id] = [];
   const r = await api.run(s);
@@ -528,14 +531,23 @@ async function runScript(id) {
 }
 async function runInTerminal(id) {
   const s = getScript(id); if (!s) return;
+  if (ui.running.has(id)) return select(id, 'output');
   if (ui.code[id]?.dirty && !(await saveCode(id))) return;
+  if (lib.settings.terminalMode !== 'window') {
+    if (await termSupported()) return runInAppTerminal(s);
+    if (!ui.termFallbackShown) { ui.termFallbackShown = true; toast(t('term_fallback'), 'err'); }
+  }
+  return runInWindow(s);
+}
+async function runInWindow(s) {
+  const id = s.id;
   const r = await api.runInTerminal(s);
   if (!r.ok) return toast(r.error, 'err');
   s.runCount = (s.runCount || 0) + 1; s.lastRun = Date.now(); persist();
   toast(t('opened_in', { term: r.terminal || t('terminal_word') }), 'ok');
   renderSidebar(); if (ui.tab === 'overview') renderDetail();
 }
-function stopScript(id) { api.stop(id); }
+function stopScript(id) { if (ui.terms[id]?.live) api.termStop(id); else api.stop(id); }
 
 api.onRunEvent(({ id, type, data }) => {
   if (type === 'stdout' || type === 'stderr') return pushOut(id, type, data);
@@ -559,13 +571,128 @@ api.onRunEvent(({ id, type, data }) => {
   }
 });
 
+// ================================================================
+// built-in terminal (xterm.js in the window, a real pseudo-terminal in the main process)
+// ================================================================
+let termCheck = null; // null = not checked yet; true/false after the first check
+async function termSupported() {
+  if (termCheck !== null) return termCheck;
+  if (typeof window.Terminal !== 'function' || !window.FitAddon?.FitAddon) { termCheck = false; return false; }
+  try { const r = await api.termAvailable(); termCheck = !!r.ok; if (!r.ok) console.warn('built-in terminal unavailable:', r.error); }
+  catch { termCheck = false; }
+  return termCheck;
+}
+function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function termFont() { return cssVar('--mono') || 'ui-monospace, "JetBrains Mono", "Cascadia Mono", Consolas, monospace'; }
+function termTheme() {
+  const bg = cssVar('--console') || '#0b0d13', fg = cssVar('--console-text') || '#d6dcef', acc = cssVar('--accent') || '#7c6cff';
+  return {
+    background: bg, foreground: fg, cursor: acc, cursorAccent: bg, selectionBackground: acc + '55',
+    black: '#1b1f2b', red: '#ff6b79', green: '#57e0a2', yellow: '#f6c86b', blue: '#6ea8ff', magenta: '#c792ea', cyan: '#5fd7e0', white: '#d6dcef',
+    brightBlack: '#5a6382', brightRed: '#ff8793', brightGreen: '#7af0b8', brightYellow: '#ffd98a', brightBlue: '#8fbcff', brightMagenta: '#dcb0f5', brightCyan: '#8ae8ee', brightWhite: '#ffffff',
+  };
+}
+function getTerm(id) {
+  if (ui.terms[id]) return ui.terms[id];
+  const host = document.createElement('div'); host.className = 'term-host';
+  const term = new window.Terminal({
+    fontFamily: termFont(), fontSize: 13, lineHeight: 1.2, cursorBlink: true, scrollback: 5000,
+    convertEol: false, allowProposedApi: false, theme: termTheme(), macOptionIsMeta: true,
+  });
+  const fit = new window.FitAddon.FitAddon(); term.loadAddon(fit);
+  const x = { term, fit, host, opened: false, live: false };
+  term.onData((d) => { if (x.live) api.termInput(id, d); });
+  term.onResize(({ cols, rows }) => { if (x.live) api.termResize(id, cols, rows); });
+  // copy / paste like other terminals: Ctrl+Shift+C/V, Ctrl+C copies when text is selected, Ctrl+V pastes
+  term.attachCustomKeyEventHandler((e) => {
+    if (e.type !== 'keydown') return true;
+    const k = e.key.toLowerCase(), mod = e.ctrlKey || e.metaKey;
+    if (mod && k === 'c' && (e.shiftKey || term.hasSelection())) { const sel = term.getSelection(); if (sel) navigator.clipboard.writeText(sel); term.clearSelection(); return false; }
+    if (mod && k === 'v') { e.preventDefault(); navigator.clipboard.readText().then((txt) => { if (txt && x.live) term.paste(txt); }).catch(() => {}); return false; }
+    return true;
+  });
+  new ResizeObserver(() => { if (x.opened && host.isConnected && host.offsetWidth > 0) { cancelAnimationFrame(x.raf); x.raf = requestAnimationFrame(() => { try { fit.fit(); } catch {} }); } }).observe(host);
+  ui.terms[id] = x;
+  return x;
+}
+function attachTerm(id, parent) {
+  const x = getTerm(id);
+  parent.appendChild(x.host);
+  if (!x.opened) { x.term.open(x.host); x.opened = true; }
+  try { x.fit.fit(); } catch {}
+  return x;
+}
+function disposeTerm(id) { const x = ui.terms[id]; if (!x) return; try { x.term.dispose(); } catch {} x.host.remove(); delete ui.terms[id]; delete ui.outMode[id]; }
+
+async function runInAppTerminal(s) {
+  const id = s.id;
+  ui.outMode[id] = 'term';
+  const x = getTerm(id);
+  if (x.opened) x.term.reset();
+  x.term.options.cursorBlink = true;
+  ui.selectedId = id; ui.tab = 'output'; renderAll(); // shows the terminal so it can measure its size
+  const r = await api.termStart(s, x.term.cols, x.term.rows);
+  if (!r.ok) {
+    if (r.fallback) { termCheck = false; disposeTerm(id); renderDetail(); toast(t('term_fallback'), 'err'); return runInWindow(s); }
+    x.term.write(`\x1b[91m✖ ${String(r.error).replace(/\n/g, '\r\n')}\x1b[0m\r\n`);
+    return renderDetail();
+  }
+  x.live = true;
+  ui.running.add(id);
+  ui.exitInfo[id] = { pid: r.pid, started: Date.now() };
+  s.runCount = (s.runCount || 0) + 1; s.lastRun = Date.now(); persist();
+  x.term.write(`\x1b[2m$ ${r.command}\r\n  ${t('out_in', { cwd: r.cwd }).replace(/\n/g, ' ')}\x1b[0m\r\n\r\n`);
+  try { x.fit.fit(); api.termResize(id, x.term.cols, x.term.rows); } catch {}
+  renderAll();
+  x.term.focus();
+}
+api.onTermData((id, data) => { const x = ui.terms[id]; if (x) x.term.write(data); });
+api.onTermExit((id, data) => {
+  ui.running.delete(id);
+  const x = ui.terms[id]; if (x) x.live = false;
+  const info = ui.exitInfo[id] || {};
+  Object.assign(info, { done: true, code: data.code, signal: data.signal, ms: data.ms }); ui.exitInfo[id] = info;
+  const s = getScript(id);
+  if (s) { s.lastExit = { code: data.code, signal: data.signal, ms: data.ms }; persist(); }
+  const ok = data.code === 0 && !data.signal;
+  const line = data.signal ? t('stopped_sig', { sig: data.signal }) : ok ? t('finished_ok') : t('exited_code', { code: data.code });
+  if (x) { x.term.write(`\r\n\x1b[${ok ? '92' : '91'}m${line} · ${fmtMs(data.ms)}\x1b[0m\r\n\x1b[?25l`); x.term.options.cursorBlink = false; }
+  if (ui.selectedId !== id && s) toast(ok ? t('toast_finished', { name: s.name }) : data.signal ? t('toast_stopped', { name: s.name }) : t('toast_failed', { name: s.name, code: data.code }), ok ? 'ok' : 'err');
+  renderSidebar(); renderList();
+  if (ui.selectedId === id) renderDetail();
+});
+function renderTermOutput(s, body) {
+  const isRun = ui.running.has(s.id);
+  const ex = ui.exitInfo[s.id];
+  let status = `${t('term_label')}`;
+  if (isRun) status += ` · ${t('running_status')}${ex?.pid ? ` · PID ${ex.pid}` : ''}`;
+  else if (ex?.done) status += ` · ${ex.signal ? t('stopped_after', { t: fmtMs(ex.ms) }) : t('finished_code', { code: ex.code, t: fmtMs(ex.ms) })}`;
+  body.innerHTML = `
+    <div class="out-bar">
+      <div class="info">${icon('<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7 9l3 3-3 3M13 15h4"/>')} ${esc(status)}</div>
+      <button class="btn btn-sm" data-act="termcopy">${icon(I.copy)} ${t('copy')}</button>
+      <button class="btn btn-sm" data-act="termclear">${icon(I.clear)} ${t('clear')}</button>
+      ${isRun ? `<button class="btn btn-sm btn-stop" data-act="stop">${icon(I.stop)} ${t('stop')}</button>` : `<button class="btn btn-sm btn-primary" data-act="termagain">${icon(I.play)} ${t('run_again')}</button>`}
+    </div>
+    <div class="term-wrap" id="termWrap"></div>`;
+  const x = attachTerm(s.id, $('#termWrap'));
+  if (isRun) requestAnimationFrame(() => x.term.focus());
+}
+function termAllText(id) {
+  const x = ui.terms[id]; if (!x) return '';
+  const b = x.term.buffer.active; const out = [];
+  for (let i = 0; i < b.length; i++) out.push(b.getLine(i)?.translateToString(true) ?? '');
+  return out.join('\n').replace(/\n+$/, '\n');
+}
+
 function toggleFav(id) { const s = getScript(id); if (!s) return; s.favorite = !s.favorite; persist(); renderAll(); }
 
 async function removeScript(id) {
   const s = getScript(id); if (!s) return;
   const ok = await confirmDialog(t('remove_q'), t('remove_text', { name: s.name }), t('remove'));
   if (!ok) return;
-  if (ui.running.has(id)) api.stop(id);
+  if (ui.running.has(id)) stopScript(id);
+  disposeTerm(id);
   lib.scripts = lib.scripts.filter((x) => x.id !== id);
   delete ui.code[id]; delete ui.outputs[id];
   if (ui.selectedId === id) ui.selectedId = null;
@@ -955,6 +1082,7 @@ function activeTheme() {
 }
 function applySettings() {
   const st = lib.settings;
+  queueMicrotask(() => Object.values(ui.terms).forEach((x) => { try { x.term.options.theme = termTheme(); x.term.options.fontFamily = termFont(); } catch {} }));
   // migrate settings from v1.0.0 (dark/light + accent)
   if (!st.themeId) { st.themeId = st.theme === 'light' ? 'daylight' : 'midnight'; if (st.accent === '#7c6cff') st.accent = ''; }
   const t = activeTheme();
@@ -1038,6 +1166,12 @@ function openSettings() {
           ${THEMES.filter((th) => th.wall).map((th) => `<option value="${th.wall}" ${st.wallpaper === th.wall ? 'selected' : ''}>${esc(themeName(th))}</option>`).join('')}
         </select>
         <div class="hint">${t('wall_hint')}</div></div>
+      <div class="field"><label>${t('term_where')}</label>
+        <select class="input" id="stTermMode" style="max-width:320px">
+          <option value="inside" ${st.terminalMode !== 'window' ? 'selected' : ''}>${t('term_inside')}</option>
+          <option value="window" ${st.terminalMode === 'window' ? 'selected' : ''}>${t('term_window')}</option>
+        </select>
+        <div class="hint">${t('term_hint')}</div></div>
       <div class="field"><label>${t('language_setting')}</label>
         <select class="input" id="stLang" style="max-width:320px">
           <option value="auto">${esc(t('lang_auto', { lang: (window.I18N.LANGUAGES.find((l) => l.code === systemLang()) || {}).name || 'English' }))}</option>
@@ -1059,6 +1193,7 @@ function openSettings() {
   openModal(html, 'wide');
   $('#stUpdAuto').onchange = (e) => { st.updAuto = e.target.checked; persist(); };
   $('#stUpdNow').onclick = async () => { const r = await checkUpdate(true); if (r?.newer) { closeModal(); openUpdateDialog(); } };
+  $('#stTermMode').onchange = (e) => { st.terminalMode = e.target.value; persist(); };
   $('#stWall').onchange = (e) => { st.wallpaper = e.target.value; applySettings(); persist(); };
   $('#stThemes').onclick = (e) => {
     const b = e.target.closest('.theme-card'); if (!b) return;
@@ -1145,6 +1280,9 @@ async function doAction(act, id = ui.selectedId) {
     case 'savecode': return saveCode(id);
     case 'reload': delete ui.code[id]; return renderDetail();
     case 'clearout': ui.outputs[id] = []; return renderDetail();
+    case 'termclear': ui.terms[id]?.term.clear(); return ui.terms[id]?.term.focus();
+    case 'termcopy': navigator.clipboard.writeText(ui.terms[id]?.term.getSelection() || termAllText(id)); return toast(t('output_copied'));
+    case 'termagain': return runInTerminal(id);
     case 'copyout': navigator.clipboard.writeText((ui.outputs[id] || []).map((c) => c.text).join('').replace(ANSI, '')); return toast(t('output_copied'));
   }
 }
@@ -1236,6 +1374,7 @@ function moveSel(d) {
 }
 
 document.addEventListener('keydown', (e) => {
+  if (e.target?.closest?.('.xterm')) return; // typing in the built-in terminal: never trigger app shortcuts
   const mod = e.ctrlKey || e.metaKey;
   const inField = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName);
   const modalOpen = $('#modalBackdrop').classList.contains('show');
@@ -1280,7 +1419,7 @@ function renderSelBar() {
 }
 function removeIds(ids) {
   const set = new Set(ids);
-  for (const id of set) { if (ui.running.has(id)) api.stop(id); delete ui.code[id]; delete ui.outputs[id]; }
+  for (const id of set) { if (ui.running.has(id)) stopScript(id); disposeTerm(id); delete ui.code[id]; delete ui.outputs[id]; }
   lib.scripts = lib.scripts.filter((s) => !set.has(s.id));
   if (set.has(ui.selectedId)) ui.selectedId = null;
   persist();

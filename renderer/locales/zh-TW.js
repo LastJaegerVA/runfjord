@@ -135,4 +135,11 @@ I18N.register('zh-TW', '繁體中文', {
   upd_page: "開啟發布頁面",
   upd_none: "你已是最新版本（{v}）。",
   upd_check_failed: "無法檢查更新。你有連上網路嗎？",
+  term_where: "「在終端機中執行」開啟於",
+  term_inside: "Runfjord 內部",
+  term_window: "獨立的終端機視窗",
+  term_hint: "在 Runfjord 內部，你可以像在一般終端機一樣輸入密碼（sudo）、回答提問、按 Ctrl+C。複製貼上用 Ctrl+Shift+C / Ctrl+Shift+V。",
+  term_fallback: "這台電腦無法使用內建終端機，因此改為開啟獨立的終端機視窗。",
+  run_again: "再次執行",
+  term_label: "終端機",
 });

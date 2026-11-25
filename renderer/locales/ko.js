@@ -135,4 +135,11 @@ I18N.register('ko', '한국어', {
   upd_page: "릴리스 페이지 열기",
   upd_none: "최신 버전입니다({v}).",
   upd_check_failed: "업데이트를 확인할 수 없습니다. 온라인인가요?",
+  term_where: "“터미널에서 실행”이 열리는 곳",
+  term_inside: "Runfjord 안에서",
+  term_window: "별도 터미널 창에서",
+  term_hint: "Runfjord 안에서도 일반 터미널처럼 비밀번호(sudo)를 입력하고, 질문에 답하고, Ctrl+C를 누를 수 있습니다. 복사·붙여넣기: Ctrl+Shift+C / Ctrl+Shift+V.",
+  term_fallback: "이 컴퓨터에서는 내장 터미널을 쓸 수 없어 별도 터미널 창을 열었습니다.",
+  run_again: "다시 실행",
+  term_label: "터미널",
 });

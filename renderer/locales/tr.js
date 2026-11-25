@@ -135,4 +135,11 @@ I18N.register('tr', 'Türkçe', {
   upd_page: "Sürüm sayfasını aç",
   upd_none: "En yeni sürüm sizde ({v}).",
   upd_check_failed: "Güncellemeler denetlenemedi. Çevrimiçi misiniz?",
+  term_where: "“Terminalde çalıştır” şurada açılır",
+  term_inside: "Runfjord içinde",
+  term_window: "Ayrı bir terminal penceresinde",
+  term_hint: "Runfjord içinde parola (sudo) yazabilir, sorulara yanıt verebilir ve normal bir terminaldeki gibi Ctrl+C'ye basabilirsiniz. Kopyala/yapıştır: Ctrl+Shift+C / Ctrl+Shift+V.",
+  term_fallback: "Yerleşik terminal bu bilgisayarda kullanılamıyor, bu yüzden ayrı bir terminal penceresi açıldı.",
+  run_again: "Yeniden çalıştır",
+  term_label: "Terminal",
 });

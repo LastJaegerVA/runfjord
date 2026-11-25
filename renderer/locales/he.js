@@ -135,4 +135,11 @@ I18N.register('he', 'עברית', {
   upd_page: "פתיחת דף הגרסה",
   upd_none: "יש לך את הגרסה החדשה ביותר ({v}).",
   upd_check_failed: "לא ניתן לבדוק עדכונים. אתה מחובר?",
+  term_where: "„הרצה בטרמינל” נפתחת",
+  term_inside: "בתוך Runfjord",
+  term_window: "בחלון טרמינל נפרד",
+  term_hint: "בתוך Runfjord אפשר להקליד סיסמאות (sudo), לענות על שאלות וללחוץ Ctrl+C, בדיוק כמו בטרמינל רגיל. העתקה והדבקה עם Ctrl+Shift+C / Ctrl+Shift+V.",
+  term_fallback: "הטרמינל המובנה לא זמין במחשב הזה, לכן נפתח חלון טרמינל נפרד.",
+  run_again: "הרצה שוב",
+  term_label: "טרמינל",
 });

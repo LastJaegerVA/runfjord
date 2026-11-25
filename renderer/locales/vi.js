@@ -135,4 +135,11 @@ I18N.register('vi', 'Tiếng Việt', {
   upd_page: "Mở trang phát hành",
   upd_none: "Bạn đang dùng bản mới nhất ({v}).",
   upd_check_failed: "Không kiểm tra được cập nhật. Bạn có đang trực tuyến?",
+  term_where: "“Chạy trong terminal” mở",
+  term_inside: "Bên trong Runfjord",
+  term_window: "Trong cửa sổ terminal riêng",
+  term_hint: "Bên trong Runfjord bạn có thể gõ mật khẩu (sudo), trả lời câu hỏi và nhấn Ctrl+C như một terminal bình thường. Sao chép và dán bằng Ctrl+Shift+C / Ctrl+Shift+V.",
+  term_fallback: "Terminal tích hợp không dùng được trên máy này, nên đã mở cửa sổ terminal riêng.",
+  run_again: "Chạy lại",
+  term_label: "Terminal",
 });

@@ -289,4 +289,11 @@ I18N.register("nb", "Norsk", {
   upd_page: "Åpne utgivelsessiden",
   upd_none: "Du har nyeste versjon ({v}).",
   upd_check_failed: "Kunne ikke se etter oppdateringer. Er du på nett?",
+  term_where: "«Kjør i terminal» åpner",
+  term_inside: "Inne i Runfjord",
+  term_window: "I et eget terminalvindu",
+  term_hint: "Inne i Runfjord kan du skrive passord (sudo), svare på spørsmål og trykke Ctrl+C, akkurat som i en vanlig terminal. Kopier og lim inn med Ctrl+Shift+C / Ctrl+Shift+V.",
+  term_fallback: "Den innebygde terminalen er ikke tilgjengelig på denne maskinen, så et eget terminalvindu ble åpnet i stedet.",
+  run_again: "Kjør igjen",
+  term_label: "Terminal",
 });

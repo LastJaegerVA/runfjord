@@ -135,4 +135,11 @@ I18N.register('hr', 'Hrvatski', {
   upd_page: "Otvori stranicu izdanja",
   upd_none: "Imaš najnoviju verziju ({v}).",
   upd_check_failed: "Nije moguće provjeriti ažuriranja. Jesi li na mreži?",
+  term_where: "„Pokreni u terminalu” otvara",
+  term_inside: "Unutar Runfjorda",
+  term_window: "U zasebnom prozoru terminala",
+  term_hint: "Unutar Runfjorda možeš upisivati lozinke (sudo), odgovarati na pitanja i pritiskati Ctrl+C, kao u običnom terminalu. Kopiraj i zalijepi s Ctrl+Shift+C / Ctrl+Shift+V.",
+  term_fallback: "Ugrađeni terminal nije dostupan na ovom računalu, pa je otvoren zaseban prozor terminala.",
+  run_again: "Pokreni ponovno",
+  term_label: "Terminal",
 });

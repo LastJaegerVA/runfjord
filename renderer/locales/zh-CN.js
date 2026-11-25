@@ -135,4 +135,11 @@ I18N.register('zh-CN', '简体中文', {
   upd_page: "打开发布页面",
   upd_none: "你已是最新版本（{v}）。",
   upd_check_failed: "无法检查更新。你联网了吗？",
+  term_where: "“在终端中运行”打开于",
+  term_inside: "Runfjord 内部",
+  term_window: "单独的终端窗口",
+  term_hint: "在 Runfjord 内部，你可以像在普通终端里一样输入密码（sudo）、回答提问、按 Ctrl+C。复制粘贴用 Ctrl+Shift+C / Ctrl+Shift+V。",
+  term_fallback: "这台电脑上无法使用内置终端，因此改为打开了单独的终端窗口。",
+  run_again: "再次运行",
+  term_label: "终端",
 });

@@ -135,4 +135,11 @@ I18N.register('ja', '日本語', {
   upd_page: "リリースページを開く",
   upd_none: "最新バージョンです（{v}）。",
   upd_check_failed: "アップデートを確認できませんでした。オンラインですか？",
+  term_where: "「ターミナルで実行」の開き方",
+  term_inside: "Runfjord の中で",
+  term_window: "別のターミナルウィンドウで",
+  term_hint: "Runfjord の中でも、通常のターミナルと同じようにパスワード（sudo）の入力、質問への回答、Ctrl+C ができます。コピー＆ペーストは Ctrl+Shift+C / Ctrl+Shift+V。",
+  term_fallback: "このPCでは内蔵ターミナルを使えないため、代わりに別のターミナルウィンドウを開きました。",
+  run_again: "もう一度実行",
+  term_label: "ターミナル",
 });

@@ -289,4 +289,11 @@ I18N.register("fr", "Français", {
   upd_page: "Ouvrir la page de la version",
   upd_none: "Vous avez la dernière version ({v}).",
   upd_check_failed: "Impossible de rechercher les mises à jour. Êtes-vous en ligne ?",
+  term_where: "« Exécuter dans un terminal » ouvre",
+  term_inside: "Dans Runfjord",
+  term_window: "Dans une fenêtre de terminal séparée",
+  term_hint: "Dans Runfjord, vous pouvez taper des mots de passe (sudo), répondre aux questions et faire Ctrl+C, comme dans un terminal normal. Copier-coller avec Ctrl+Maj+C / Ctrl+Maj+V.",
+  term_fallback: "Le terminal intégré n’est pas disponible sur cet ordinateur, une fenêtre de terminal séparée a donc été ouverte.",
+  run_again: "Relancer",
+  term_label: "Terminal",
 });

@@ -135,4 +135,11 @@ I18N.register('hu', 'Magyar', {
   upd_page: "Kiadási oldal megnyitása",
   upd_none: "A legújabb verzió van meg ({v}).",
   upd_check_failed: "Nem sikerült frissítést keresni. Van internet?",
+  term_where: "A „Futtatás terminálban” itt nyílik meg:",
+  term_inside: "A Runfjordon belül",
+  term_window: "Külön terminálablakban",
+  term_hint: "A Runfjordon belül beírhatsz jelszót (sudo), válaszolhatsz kérdésekre és nyomhatsz Ctrl+C-t, mint egy rendes terminálban. Másolás és beillesztés: Ctrl+Shift+C / Ctrl+Shift+V.",
+  term_fallback: "A beépített terminál ezen a gépen nem érhető el, ezért külön terminálablak nyílt.",
+  run_again: "Futtatás újra",
+  term_label: "Terminál",
 });

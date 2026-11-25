@@ -1,7 +1,7 @@
 {
   "name": "runfjord",
   "productName": "Runfjord",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "Keep all your scripts in one library, with a note on what each one does, and run them with one click.",
   "main": "main.js",
   "author": {
@@ -80,7 +80,11 @@
       ],
       "artifactName": "Runfjord-Linux-Arch-x86_64.pkg.tar.xz"
     },
-    "copyright": "Copyright © 2026 Jonas Olsen-Sund (LastJaegerVA)"
+    "copyright": "Copyright © 2026 Jonas Olsen-Sund (LastJaegerVA)",
+    "asarUnpack": [
+      "node_modules/node-pty/**"
+    ],
+    "npmRebuild": false
   },
   "devDependencies": {
     "electron": "^45.4.1",
@@ -101,5 +105,10 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/LastJaegerVA/runfjord.git"
+  },
+  "dependencies": {
+    "@xterm/addon-fit": "0.11.0",
+    "@xterm/xterm": "6.0.0",
+    "node-pty": "1.1.0"
   }
 }

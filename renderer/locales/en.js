@@ -289,4 +289,11 @@ I18N.register("en", "English", {
   upd_page: "Open release page",
   upd_none: "You have the newest version ({v}).",
   upd_check_failed: "Couldn’t check for updates. Are you online?",
+  term_where: "“Run in terminal” opens",
+  term_inside: "Inside Runfjord",
+  term_window: "In a separate terminal window",
+  term_hint: "Inside Runfjord you can type passwords (sudo), answer questions and press Ctrl+C, just like in a normal terminal. Copy and paste with Ctrl+Shift+C / Ctrl+Shift+V.",
+  term_fallback: "The built-in terminal isn’t available on this computer, so a separate terminal window was opened instead.",
+  run_again: "Run again",
+  term_label: "Terminal",
 });

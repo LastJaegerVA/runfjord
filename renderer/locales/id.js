@@ -135,4 +135,11 @@ I18N.register('id', 'Bahasa Indonesia', {
   upd_page: "Buka halaman rilis",
   upd_none: "Anda sudah memakai versi terbaru ({v}).",
   upd_check_failed: "Tidak bisa memeriksa pembaruan. Apakah Anda online?",
+  term_where: "“Jalankan di terminal” membuka",
+  term_inside: "Di dalam Runfjord",
+  term_window: "Di jendela terminal terpisah",
+  term_hint: "Di dalam Runfjord Anda bisa mengetik kata sandi (sudo), menjawab pertanyaan, dan menekan Ctrl+C seperti di terminal biasa. Salin dan tempel dengan Ctrl+Shift+C / Ctrl+Shift+V.",
+  term_fallback: "Terminal bawaan tidak tersedia di komputer ini, jadi jendela terminal terpisah dibuka.",
+  run_again: "Jalankan lagi",
+  term_label: "Terminal",
 });

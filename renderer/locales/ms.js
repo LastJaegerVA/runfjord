@@ -135,4 +135,11 @@ I18N.register('ms', 'Bahasa Melayu', {
   upd_page: "Buka halaman keluaran",
   upd_none: "Anda ada versi terbaharu ({v}).",
   upd_check_failed: "Tidak dapat menyemak kemas kini. Adakah anda dalam talian?",
+  term_where: "“Jalankan dalam terminal” membuka",
+  term_inside: "Di dalam Runfjord",
+  term_window: "Dalam tetingkap terminal berasingan",
+  term_hint: "Di dalam Runfjord anda boleh menaip kata laluan (sudo), menjawab soalan dan menekan Ctrl+C seperti terminal biasa. Salin dan tampal dengan Ctrl+Shift+C / Ctrl+Shift+V.",
+  term_fallback: "Terminal terbina dalam tidak tersedia pada komputer ini, jadi tetingkap terminal berasingan dibuka.",
+  run_again: "Jalankan semula",
+  term_label: "Terminal",
 });

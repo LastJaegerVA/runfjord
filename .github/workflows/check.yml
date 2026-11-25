@@ -18,6 +18,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: node tools/pty-smoke.js
       - name: Syntax check
         run: for f in main.js preload.js renderer/*.js renderer/locales/*.js tools/*.js; do node --check "$f"; done
       - name: Translations complete

@@ -135,4 +135,11 @@ I18N.register('fi', 'Suomi', {
   upd_page: "Avaa julkaisusivu",
   upd_none: "Sinulla on uusin versio ({v}).",
   upd_check_failed: "Päivityksiä ei voitu tarkistaa. Oletko verkossa?",
+  term_where: "”Suorita päätteessä” avaa",
+  term_inside: "Runfjordin sisällä",
+  term_window: "Erillisessä pääteikkunassa",
+  term_hint: "Runfjordin sisällä voit kirjoittaa salasanoja (sudo), vastata kysymyksiin ja painaa Ctrl+C kuten tavallisessa päätteessä. Kopioi ja liitä: Ctrl+Shift+C / Ctrl+Shift+V.",
+  term_fallback: "Sisäänrakennettu pääte ei ole käytettävissä tällä tietokoneella, joten avattiin erillinen pääteikkuna.",
+  run_again: "Suorita uudelleen",
+  term_label: "Pääte",
 });

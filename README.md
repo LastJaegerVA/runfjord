@@ -24,7 +24,8 @@
 - **One library for all your scripts** — add them with a button, <kbd>Ctrl</kbd>+<kbd>N</kbd>, or by dragging files onto the window.
 - **Finds the scripts you already have** — one click searches your usual folders (`~/bin`, `~/.local/bin`, `~/scripts`, Documents, Desktop, Downloads, or any folder you pick), skips program, system and hidden folders, and sorts what it finds into categories by language or folder. You tick which ones to add.
 - **Never forget what a script does** — every script gets a *What it does* and a *What it's for* note. Descriptions are read automatically from the comment at the top of the file.
-- **Run with one click** — live output (errors in red), send input, stop at any time. *Run in terminal* for scripts that need `sudo` or ask questions.
+- **Run with one click** — live output (errors in red), send input, stop at any time.
+- **Built-in terminal** — *Run in terminal* opens a real terminal right inside Runfjord: type `sudo` passwords, answer questions, see colours and progress bars, press <kbd>Ctrl</kbd>+<kbd>C</kbd>. Copy/paste with <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd>/<kbd>V</kbd>. Prefer your own terminal app? *Settings → “Run in terminal” opens → In a separate terminal window*. If the built-in terminal can't start on a computer, Runfjord uses a separate window automatically.
 - **Organise** — categories (drag cards onto them), tags, favourites, icons, search and sorting.
 - **Clean up fast** — the select button (or <kbd>Ctrl</kbd>+click) lets you tick several scripts and remove them in one go; <kbd>Delete</kbd> removes the selected script; *Settings → Clean up → Remove all scripts* empties the library. Only the library entries go — your script files are never deleted.
 - **Built-in code editor** and templates for new scripts (Bash, Python, JavaScript, PowerShell, Batch, Fish).

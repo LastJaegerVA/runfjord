@@ -135,4 +135,11 @@ I18N.register('nl', 'Nederlands', {
   upd_page: "Releasepagina openen",
   upd_none: "Je hebt de nieuwste versie ({v}).",
   upd_check_failed: "Kon niet naar updates zoeken. Ben je online?",
+  term_where: "‘In terminal uitvoeren’ opent",
+  term_inside: "In Runfjord",
+  term_window: "In een apart terminalvenster",
+  term_hint: "In Runfjord kun je wachtwoorden (sudo) typen, vragen beantwoorden en Ctrl+C gebruiken, net als in een gewone terminal. Kopiëren en plakken met Ctrl+Shift+C / Ctrl+Shift+V.",
+  term_fallback: "De ingebouwde terminal is niet beschikbaar op deze computer, daarom is een apart terminalvenster geopend.",
+  run_again: "Opnieuw uitvoeren",
+  term_label: "Terminal",
 });

@@ -135,4 +135,11 @@ I18N.register('pl', 'Polski', {
   upd_page: "Otwórz stronę wydania",
   upd_none: "Masz najnowszą wersję ({v}).",
   upd_check_failed: "Nie udało się sprawdzić aktualizacji. Czy masz internet?",
+  term_where: "„Uruchom w terminalu” otwiera",
+  term_inside: "W Runfjord",
+  term_window: "W osobnym oknie terminala",
+  term_hint: "W Runfjord możesz wpisywać hasła (sudo), odpowiadać na pytania i naciskać Ctrl+C, jak w zwykłym terminalu. Kopiuj i wklejaj przez Ctrl+Shift+C / Ctrl+Shift+V.",
+  term_fallback: "Wbudowany terminal nie jest dostępny na tym komputerze, więc otwarto osobne okno terminala.",
+  run_again: "Uruchom ponownie",
+  term_label: "Terminal",
 });

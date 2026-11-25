@@ -289,4 +289,11 @@ I18N.register("sv", "Svenska", {
   upd_page: "Öppna versionssidan",
   upd_none: "Du har den senaste versionen ({v}).",
   upd_check_failed: "Kunde inte söka efter uppdateringar. Är du online?",
+  term_where: "”Kör i terminal” öppnar",
+  term_inside: "Inuti Runfjord",
+  term_window: "I ett separat terminalfönster",
+  term_hint: "Inuti Runfjord kan du skriva lösenord (sudo), svara på frågor och trycka Ctrl+C, precis som i en vanlig terminal. Kopiera och klistra in med Ctrl+Shift+C / Ctrl+Shift+V.",
+  term_fallback: "Den inbyggda terminalen finns inte på den här datorn, så ett separat terminalfönster öppnades i stället.",
+  run_again: "Kör igen",
+  term_label: "Terminal",
 });

@@ -3,6 +3,17 @@
 All notable changes to Runfjord. The format follows [Keep a Changelog](https://keepachangelog.com/),
 and versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.9.0] - 2026-11-25
+
+### Added
+- **Built-in terminal**: *Run in terminal* now opens a real terminal inside Runfjord (xterm.js + node-pty) instead of a separate window. Passwords (`sudo`), questions, colours, progress bars and <kbd>Ctrl</kbd>+<kbd>C</kbd> work like in any terminal; it follows the theme and resizes with the window. Copy/paste with <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd>/<kbd>V</kbd> (or <kbd>Ctrl</kbd>+<kbd>C</kbd> with text selected, <kbd>Ctrl</kbd>+<kbd>V</kbd>).
+- *Stop* ends the script and everything it started; *Run again* restarts it in the same terminal.
+- *Settings → “Run in terminal” opens*: inside Runfjord or in a separate terminal window.
+
+### Safety
+- App shortcuts (like <kbd>Delete</kbd> to remove a script) are ignored while you type in the terminal.
+- If the built-in terminal can't start on a computer, Runfjord says so once and uses a separate terminal window instead.
+
 ## [1.8.0] - 2026-11-24
 
 ### Added
@@ -109,6 +120,7 @@ and versions follow [Semantic Versioning](https://semver.org/).
 - First release: script library with descriptions, categories, tags and favourites; one-click running with live
   output; run in terminal; built-in code editor; new-script templates; search and sorting; export/import.
 
+[1.9.0]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.9.0
 [1.8.0]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.8.0
 [1.7.0]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.7.0
 [1.6.0]: https://github.com/LastJaegerVA/runfjord/releases/tag/v1.6.0
